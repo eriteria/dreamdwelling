@@ -92,16 +92,16 @@ function startBackend() {
           if (line.includes("Starting development server") && !started) {
             started = true;
             console.log(
-              `\n${colors.green}✅ Django backend is ready!${colors.reset}`
+              `\n${colors.green}[OK] Django backend is ready!${colors.reset}`
             );
             console.log(
-              `${colors.green}   🔗 Main site: http://127.0.0.1:8000/${colors.reset}`
+              `${colors.green}   Main site: http://127.0.0.1:8000/${colors.reset}`
             );
             console.log(
-              `${colors.green}   🔧 Admin: http://127.0.0.1:8000/admin/${colors.reset}`
+              `${colors.green}   Admin: http://127.0.0.1:8000/admin/${colors.reset}`
             );
             console.log(
-              `${colors.green}   📚 API docs: http://127.0.0.1:8000/swagger/${colors.reset}\n`
+              `${colors.green}   API docs: http://127.0.0.1:8000/swagger/${colors.reset}\n`
             );
           }
         }
@@ -150,10 +150,10 @@ function startFrontend() {
           if (line.includes("localhost:3000") && !started) {
             started = true;
             console.log(
-              `\n${colors.blue}✅ Next.js frontend is ready!${colors.reset}`
+              `\n${colors.blue}[OK] Next.js frontend is ready!${colors.reset}`
             );
             console.log(
-              `${colors.blue}   🔗 Main site: http://localhost:3000/${colors.reset}\n`
+              `${colors.blue}   Main site: http://localhost:3000/${colors.reset}\n`
             );
           }
         }
@@ -184,7 +184,7 @@ function startFrontend() {
 // Main execution
 async function main() {
   console.log(
-    `\n${colors.magenta}🏠 DreamDwelling Development Server${colors.reset}`
+    `\n${colors.magenta}DreamDwelling Development Server${colors.reset}`
   );
   console.log(
     `${colors.magenta}===================================${colors.reset}\n`
@@ -229,7 +229,7 @@ async function main() {
     process.on("exit", cleanup); // Normal exit
 
     // Show instructions
-    colorLog("🚀 Development servers are running!", "INFO", colors.cyan);
+    colorLog("Development servers are running!", "INFO", colors.cyan);
     colorLog("Press Ctrl+C to stop all servers", "INFO", colors.cyan);
   }, 3000);
 }

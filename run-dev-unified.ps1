@@ -1,5 +1,6 @@
 # DreamDwelling Unified Development Server
 # Shows both frontend and backend output in a single terminal with color coding
+# Character encoding: UTF-8
 
 param(
     [switch]$Help
@@ -80,7 +81,7 @@ function Write-ServerOutput {
     }
 }
 
-Write-Host "`n🏠 DreamDwelling Unified Development Server" -ForegroundColor Magenta
+Write-Host "`nDreamDwelling Unified Development Server" -ForegroundColor Magenta
 Write-Host "===========================================" -ForegroundColor Magenta
 
 Stop-ExistingServers
@@ -129,10 +130,10 @@ try {
                     # Check if Django is ready
                     if ($line -match "Starting development server at" -and -not $backendStarted) {
                         $backendStarted = $true
-                        Write-Host "`n✅ Django backend is ready!" -ForegroundColor Green
-                        Write-Host "   🔗 Main site: http://127.0.0.1:8000/" -ForegroundColor Green
-                        Write-Host "   🔧 Admin: http://127.0.0.1:8000/admin/" -ForegroundColor Green
-                        Write-Host "   📚 API docs: http://127.0.0.1:8000/swagger/`n" -ForegroundColor Green
+                        Write-Host "`n[OK] Django backend is ready!" -ForegroundColor Green
+                        Write-Host "   Main site: http://127.0.0.1:8000/" -ForegroundColor Green
+                        Write-Host "   Admin: http://127.0.0.1:8000/admin/" -ForegroundColor Green
+                        Write-Host "   API docs: http://127.0.0.1:8000/swagger/`n" -ForegroundColor Green
                     }
                 }
             }
@@ -148,8 +149,8 @@ try {
                     # Check if Next.js is ready
                     if ($line -match "Local:.*http://localhost:3000" -and -not $frontendStarted) {
                         $frontendStarted = $true
-                        Write-Host "`n✅ Next.js frontend is ready!" -ForegroundColor Blue
-                        Write-Host "   🔗 Main site: http://localhost:3000/`n" -ForegroundColor Blue
+                        Write-Host "`n[OK] Next.js frontend is ready!" -ForegroundColor Blue
+                        Write-Host "   Main site: http://localhost:3000/`n" -ForegroundColor Blue
                     }
                 }
             }

@@ -1,5 +1,6 @@
 # DreamDwelling Development Server Runner
 # This script runs both frontend and backend in parallel with colored output
+# Character encoding: UTF-8
 
 param(
     [switch]$Help,
@@ -165,25 +166,25 @@ function Wait-ForServers {
     
     if (-not $BackendOnly) {
         if (Test-Port 8000) {
-            Write-ColorOutput "✅ Django backend ready at http://127.0.0.1:8000/" "BACKEND" $BackendColor
+            Write-ColorOutput "[OK] Django backend ready at http://127.0.0.1:8000/" "BACKEND" $BackendColor
             Write-ColorOutput "   Admin panel: http://127.0.0.1:8000/admin/" "BACKEND" $BackendColor
             Write-ColorOutput "   API docs: http://127.0.0.1:8000/swagger/" "BACKEND" $BackendColor
         } else {
-            Write-ColorOutput "❌ Django backend failed to start" "ERROR" $ErrorColor
+            Write-ColorOutput "[FAIL] Django backend failed to start" "ERROR" $ErrorColor
         }
     }
     
     if (-not $FrontendOnly) {
         if (Test-Port 3000) {
-            Write-ColorOutput "✅ Next.js frontend ready at http://localhost:3000/" "FRONTEND" $FrontendColor
+            Write-ColorOutput "[OK] Next.js frontend ready at http://localhost:3000/" "FRONTEND" $FrontendColor
         } else {
-            Write-ColorOutput "❌ Next.js frontend failed to start" "ERROR" $ErrorColor
+            Write-ColorOutput "[FAIL] Next.js frontend failed to start" "ERROR" $ErrorColor
         }
     }
 }
 
 # Main execution
-Write-Host "🏠 DreamDwelling Development Server" -ForegroundColor Magenta
+Write-Host "DreamDwelling Development Server" -ForegroundColor Magenta
 Write-Host "====================================" -ForegroundColor Magenta
 
 # Validate paths
@@ -229,7 +230,7 @@ try {
     
     # Keep script running and show instructions
     Write-Host ""
-    Write-ColorOutput "🚀 Development servers are running!" "INFO" $InfoColor
+    Write-ColorOutput "Development servers are running!" "INFO" $InfoColor
     Write-ColorOutput "Press Ctrl+C to stop all servers" "INFO" $InfoColor
     Write-Host ""
     
