@@ -29,21 +29,29 @@ export default function SettingsPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-8">Settings</h1>
-              
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">
+                Settings
+              </h1>
+
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Settings</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Account Settings
+                  </h2>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">Email Notifications</h3>
-                        <p className="text-sm text-gray-500">Receive email updates about your properties</p>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          Email Notifications
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Receive email updates about your properties
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer" 
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
                           checked={user?.email_notifications || false}
                           readOnly
                         />
@@ -54,7 +62,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Security</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Security
+                  </h2>
                   <div className="space-y-4">
                     <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                       Change Password
@@ -63,7 +73,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Preferences</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Preferences
+                  </h2>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -30,11 +30,12 @@ export default function ProfilePage() {
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile</h1>
-              
+
               <div className="space-y-6">
                 <div className="flex items-center space-x-6">
                   <div className="w-24 h-24 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-medium">
-                    {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
+                    {user?.first_name?.charAt(0)}
+                    {user?.last_name?.charAt(0)}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
@@ -47,24 +48,42 @@ export default function ProfilePage() {
                 <div className="border-t border-gray-200 pt-6">
                   <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">First Name</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.first_name || "Not specified"}</dd>
+                      <dt className="text-sm font-medium text-gray-500">
+                        First Name
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {user?.first_name || "Not specified"}
+                      </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Last Name</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.last_name || "Not specified"}</dd>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Last Name
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {user?.last_name || "Not specified"}
+                      </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Email</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.email}</dd>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Email
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {user?.email}
+                      </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.phone_number || "Not specified"}</dd>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Phone
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {user?.phone_number || "Not specified"}
+                      </dd>
                     </div>
                     <div className="sm:col-span-2">
                       <dt className="text-sm font-medium text-gray-500">Bio</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.bio || "No bio provided"}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {user?.bio || "No bio provided"}
+                      </dd>
                     </div>
                   </dl>
                 </div>
