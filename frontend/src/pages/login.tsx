@@ -26,12 +26,7 @@ export default function LoginPage() {
     if (isAuthenticated) {
       router.push("/");
     }
-
-    return () => {
-      // Clear any auth errors when component unmounts
-      dispatch(clearAuth());
-    };
-  }, [isAuthenticated, router, dispatch]);
+  }, [isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

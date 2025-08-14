@@ -32,6 +32,11 @@ const initialState: AuthState = {
   error: null,
 };
 
+// Set initial auth header if token exists
+if (initialState.token) {
+  axios.defaults.headers.common["Authorization"] = `JWT ${initialState.token}`;
+}
+
 // Async thunks
 export const login = createAsyncThunk(
   "auth/login",
@@ -40,6 +45,11 @@ export const login = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+      console.log("Login attempt:", {
+        email,
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+      });
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/jwt/create/`,
         {
@@ -47,6 +57,8 @@ export const login = createAsyncThunk(
           password,
         }
       );
+
+      console.log("Login response:", response.data);
       const { access, refresh } = response.data;
 
       // Store tokens in cookies
@@ -57,15 +69,19 @@ export const login = createAsyncThunk(
       axios.defaults.headers.common["Authorization"] = `JWT ${access}`;
 
       // Get user profile
+      console.log("Fetching user profile...");
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/users/me/`
       );
+
+      console.log("User profile response:", userResponse.data);
 
       return {
         token: access,
         user: userResponse.data,
       };
     } catch (error: any) {
+      console.error("Login error:", error.response?.data || error.message);
       return rejectWithValue(
         error.response?.data || { detail: "Login failed" }
       );
@@ -105,15 +121,27 @@ export const fetchUser = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as { auth: AuthState };
+      console.log("fetchUser - Current state:", {
+        hasToken: !!state.auth.token,
+        isAuthenticated: state.auth.isAuthenticated,
+      });
+
       if (!state.auth.token) {
         return rejectWithValue("No authentication token");
       }
 
+      console.log("fetchUser - Making API call with token...");
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/users/me/`
       );
+
+      console.log("fetchUser - Response:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error(
+        "fetchUser - Error:",
+        error.response?.data || error.message
+      );
       return rejectWithValue(
         error.response?.data || { detail: "Failed to fetch user" }
       );
