@@ -1,0 +1,497 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import Image from "next/image";
+import Layout from "@/components/Layout";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { fetchPropertyDetail } from "@/features/properties/propertiesSlice";
+import {
+  addFavorite,
+  removeFavorite,
+} from "@/features/favorites/favoritesSlice";
+
+export default function PropertyDetailPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const dispatch = useAppDispatch();
+
+  const { currentProperty, loading, error } = useAppSelector(
+    (state) => state.properties
+  );
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { favorites } = useAppSelector((state) => state.favorites);
+
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  // Check if property is in favorites
+  const isFavorite = favorites.some((fav) => fav.id === currentProperty?.id);
+
+  useEffect(() => {
+    if (id && typeof id === "string") {
+      dispatch(fetchPropertyDetail(Number(id)));
+    }
+  }, [dispatch, id]);
+
+  const handleFavoriteToggle = () => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    if (currentProperty) {
+      if (isFavorite) {
+        dispatch(removeFavorite(currentProperty.id));
+      } else {
+        dispatch(addFavorite(currentProperty.id));
+      }
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 flex justify-center">
+          <div className="spinner-border text-blue-600" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !currentProperty) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <p>Error loading property details. Please try again later.</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <Head>
+        <title>{currentProperty.title} | DreamDwelling</title>
+        <meta
+          name="description"
+          content={currentProperty.description.slice(0, 160)}
+        />
+      </Head>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumbs */}
+        <div className="flex text-sm text-gray-500 mb-4">
+          <span
+            onClick={() => router.push("/")}
+            className="cursor-pointer hover:text-blue-600"
+          >
+            Home
+          </span>
+          <span className="mx-2">/</span>
+          <span
+            onClick={() => router.push("/properties")}
+            className="cursor-pointer hover:text-blue-600"
+          >
+            Properties
+          </span>
+          <span className="mx-2">/</span>
+          <span className="text-gray-700">{currentProperty.title}</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Property Images */}
+            <div className="mb-6">
+              {currentProperty.images && currentProperty.images.length > 0 ? (
+                <>
+                  {/* Main image */}
+                  <div className="relative h-96 mb-4 rounded-lg overflow-hidden">
+                    <Image
+                      src={currentProperty.images[selectedImage].image}
+                      alt={`${currentProperty.title} - Image ${
+                        selectedImage + 1
+                      }`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  {/* Thumbnail gallery */}
+                  {currentProperty.images.length > 1 && (
+                    <div className="grid grid-cols-5 gap-2">
+                      {currentProperty.images.map((image, index) => (
+                        <div
+                          key={index}
+                          onClick={() => setSelectedImage(index)}
+                          className={`relative h-20 rounded-md overflow-hidden cursor-pointer ${
+                            selectedImage === index
+                              ? "ring-2 ring-blue-500"
+                              : ""
+                          }`}
+                        >
+                          <Image
+                            src={image.image}
+                            alt={`${currentProperty.title} - Thumbnail ${
+                              index + 1
+                            }`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="h-96 bg-gray-200 flex items-center justify-center rounded-lg">
+                  <span className="text-gray-400">No images available</span>
+                </div>
+              )}
+            </div>
+
+            {/* Property Details */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                {currentProperty.title}
+              </h1>
+              <p className="text-gray-600 mb-4">{currentProperty.address}</p>
+
+              <div className="flex items-center mb-6">
+                <span className="text-3xl font-bold text-blue-600">
+                  {formatPrice(currentProperty.price)}
+                </span>
+                {currentProperty.listing_type === "rent" && (
+                  <span className="text-gray-500 ml-1">/month</span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">Bedrooms</p>
+                  <p className="text-xl font-semibold">
+                    {currentProperty.bedrooms}
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">Bathrooms</p>
+                  <p className="text-xl font-semibold">
+                    {currentProperty.bathrooms}
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">Area</p>
+                  <p className="text-xl font-semibold">
+                    {currentProperty.square_feet} sqft
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">Year Built</p>
+                  <p className="text-xl font-semibold">
+                    {currentProperty.year_built || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <h2 className="text-xl font-semibold mb-3">Description</h2>
+              <p className="text-gray-700 mb-6 whitespace-pre-line">
+                {currentProperty.description}
+              </p>
+
+              <h2 className="text-xl font-semibold mb-3">Features</h2>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                {currentProperty.features &&
+                  currentProperty.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-green-500 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>{feature.name}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+
+            {/* Map */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-4">Location</h2>
+              <div className="h-96 bg-gray-200 rounded-lg">
+                {/* Map integration would go here */}
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500">
+                    Map integration will be implemented here
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Contact Agent */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h3 className="text-xl font-semibold mb-4">Contact Agent</h3>
+
+              {currentProperty.agent && (
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 mr-3">
+                    {/* Agent image would go here */}
+                  </div>
+                  <div>
+                    <p className="font-semibold">
+                      {currentProperty.agent.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {currentProperty.agent.company}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <form className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your name"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your email"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your phone number"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="I'm interested in this property..."
+                    defaultValue={`Hi, I'm interested in ${currentProperty.title}.`}
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            {/* Actions */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h3 className="text-lg font-semibold mb-4">Actions</h3>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleFavoriteToggle}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  {isFavorite ? (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-red-500 mr-2"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Remove from Favorites</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-400 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      <span>Add to Favorites</span>
+                    </>
+                  )}
+                </button>
+
+                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>Schedule a Tour</span>
+                </button>
+
+                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-400 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                    />
+                  </svg>
+                  <span>Share Property</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Property Details Table */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold mb-4">Property Details</h3>
+
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Property ID</td>
+                    <td className="py-2 text-right">{currentProperty.id}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Property Type</td>
+                    <td className="py-2 text-right">
+                      {currentProperty.property_type?.name || "N/A"}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Listing Type</td>
+                    <td className="py-2 text-right capitalize">
+                      {currentProperty.listing_type || "N/A"}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Year Built</td>
+                    <td className="py-2 text-right">
+                      {currentProperty.year_built || "N/A"}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Square Feet</td>
+                    <td className="py-2 text-right">
+                      {currentProperty.square_feet || "N/A"}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Lot Size</td>
+                    <td className="py-2 text-right">
+                      {currentProperty.lot_size || "N/A"}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 text-gray-600">Parking</td>
+                    <td className="py-2 text-right">
+                      {currentProperty.parking_spaces || 0} spaces
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-gray-600">Listed On</td>
+                    <td className="py-2 text-right">
+                      {formatDate(currentProperty.created_at)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
