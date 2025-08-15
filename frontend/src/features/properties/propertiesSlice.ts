@@ -82,10 +82,25 @@ const initialState: PropertiesState = {
 // Async thunks
 export const fetchProperties = createAsyncThunk(
   "properties/fetchProperties",
-  async (params: { page?: number; filters?: any }, { rejectWithValue }) => {
+  async (
+    params: { page?: number; filters?: any } = {},
+    { rejectWithValue }
+  ) => {
     try {
       const page = params.page || 1;
-      const queryParams = new URLSearchParams(params.filters);
+      const filters = params.filters || {};
+
+      // Create URLSearchParams and only add non-empty values
+      const queryParams = new URLSearchParams();
+
+      // Add filters to query params, skipping empty values
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, String(value));
+        }
+      });
+
+      // Add page parameter
       queryParams.append("page", page.toString());
 
       const response = await axios.get(

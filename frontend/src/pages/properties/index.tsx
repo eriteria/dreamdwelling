@@ -10,9 +10,11 @@ import { fetchProperties } from "@/features/properties/propertiesSlice";
 export default function PropertiesPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { properties = [], isLoading, error } = useAppSelector(
-    (state) => state.properties
-  );
+  const {
+    properties = [],
+    isLoading,
+    error,
+  } = useAppSelector((state) => state.properties);
   const { filters } = useAppSelector((state) => state.search);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -21,8 +23,10 @@ export default function PropertiesPage() {
   // Fetch properties when filters or sort option changes
   useEffect(() => {
     const fetchParams = {
-      ...filters,
-      ordering: getSortOrdering(sortBy),
+      filters: {
+        ...filters,
+        ordering: getSortOrdering(sortBy),
+      },
     };
     dispatch(fetchProperties(fetchParams));
   }, [dispatch, filters, sortBy]);
@@ -165,9 +169,10 @@ export default function PropertiesPage() {
                     : "space-y-6"
                 }
               >
-                {Array.isArray(properties) && properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
+                {Array.isArray(properties) &&
+                  properties.map((property) => (
+                    <PropertyCard key={property.id} property={property} />
+                  ))}
               </div>
             )}
           </main>

@@ -222,12 +222,16 @@ export default function SearchFilter() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">Any</option>
-            <option value="1">House</option>
-            <option value="2">Apartment</option>
-            <option value="3">Condo</option>
-            <option value="4">Townhouse</option>
-            <option value="5">Land</option>
-            <option value="6">Commercial</option>
+            <option value="11">Single Family Home</option>
+            <option value="12">Condominium</option>
+            <option value="13">Townhouse</option>
+            <option value="14">Multi-Family</option>
+            <option value="15">Apartment</option>
+            <option value="16">Mobile Home</option>
+            <option value="17">Land</option>
+            <option value="18">Commercial</option>
+            <option value="19">Luxury Home</option>
+            <option value="20">Penthouse</option>
           </select>
         </div>
 
