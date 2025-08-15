@@ -1,4 +1,5 @@
 import { useTheme } from "@/contexts/ThemeContext";
+import { useState, useEffect } from "react";
 
 interface DarkModeToggleProps {
   className?: string;
@@ -8,6 +9,24 @@ export default function DarkModeToggle({
   className = "",
 }: DarkModeToggleProps) {
   const { theme, toggleTheme } = useTheme();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Show a neutral icon during SSR to prevent hydration mismatch
+  if (!isHydrated) {
+    return (
+      <button
+        className={`relative inline-flex items-center justify-center p-2 rounded-lg transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${className}`}
+        aria-label="Toggle theme"
+        disabled
+      >
+        <div className="w-5 h-5" />
+      </button>
+    );
+  }
 
   return (
     <button

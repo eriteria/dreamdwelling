@@ -7,15 +7,40 @@ import { useRouter } from "next/router";
 export default function MyPropertiesPage() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isHydrated]);
 
-  if (!isAuthenticated) {
-    return null; // or a loading spinner
+  // Show loading state during SSR and initial hydration to prevent mismatch
+  if (!isHydrated || !isAuthenticated) {
+    return (
+      <Layout>
+        <Head>
+          <title>My Properties - DreamDwelling</title>
+          <meta name="description" content="Manage your property listings" />
+        </Head>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-300">
+              <div className="px-6 py-8">
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
@@ -25,21 +50,21 @@ export default function MyPropertiesPage() {
         <meta name="description" content="Manage your property listings" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-300">
             <div className="px-6 py-8">
               <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
                   My Properties
                 </h1>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-300">
                   Add New Property
                 </button>
               </div>
 
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
+                <div className="text-gray-400 dark:text-gray-500 mb-4 transition-colors duration-300">
                   <svg
                     className="mx-auto h-12 w-12"
                     fill="none"
@@ -60,14 +85,14 @@ export default function MyPropertiesPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 transition-colors duration-300">
                   No properties yet
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-gray-500 dark:text-gray-400 mb-6 transition-colors duration-300">
                   Start building your property portfolio by adding your first
                   listing.
                 </p>
-                <button className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors duration-300">
                   List Your First Property
                 </button>
               </div>
