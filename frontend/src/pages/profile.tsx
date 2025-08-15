@@ -7,15 +7,40 @@ import { useRouter } from "next/router";
 export default function ProfilePage() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isHydrated]);
 
-  if (!isAuthenticated) {
-    return null;
+  // Show loading state during SSR and initial hydration to prevent mismatch
+  if (!isHydrated || !isAuthenticated) {
+    return (
+      <Layout>
+        <Head>
+          <title>Profile - DreamDwelling</title>
+          <meta name="description" content="View and edit your profile" />
+        </Head>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-300">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-300">
+              <div className="px-6 py-8">
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading profile...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
