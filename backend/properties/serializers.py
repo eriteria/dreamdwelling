@@ -35,9 +35,24 @@ class PropertyTypeSerializer(serializers.ModelSerializer):
 class PropertyImageSerializer(serializers.ModelSerializer):
     """Serializer for property images."""
 
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = PropertyImage
         fields = ["id", "image", "caption", "is_primary", "order"]
+
+    def get_image(self, obj):
+        """Return the image URL, handling both local files and external URLs."""
+        if obj.image:
+            # If it's already a full URL (starts with http), return as-is
+            if str(obj.image).startswith(("http://", "https://")):
+                return str(obj.image)
+            # Otherwise, build the full URL for local files
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class PropertyDocumentSerializer(serializers.ModelSerializer):
@@ -77,6 +92,7 @@ class PropertyListSerializer(GeoFeatureModelSerializer):
         source="property_type.name", read_only=True
     )
     primary_image = serializers.SerializerMethodField()
+    images = PropertyImageSerializer(many=True, read_only=True)
     favorite_count = serializers.IntegerField(source="favorites_count", read_only=True)
 
     class Meta:
@@ -98,6 +114,7 @@ class PropertyListSerializer(GeoFeatureModelSerializer):
             "listing_type",
             "property_type_name",
             "primary_image",
+            "images",
             "favorite_count",
             "created_at",
             "location",  # Include the geo field
@@ -107,11 +124,19 @@ class PropertyListSerializer(GeoFeatureModelSerializer):
         """Get the primary image URL for the property."""
         primary = obj.images.filter(is_primary=True).first()
         if primary:
+            # If it's already a full URL (starts with http), return as-is
+            if str(primary.image).startswith(("http://", "https://")):
+                return str(primary.image)
+            # Otherwise, build the full URL for local files
             return self.context["request"].build_absolute_uri(primary.image.url)
 
         # If no primary image, get the first one
         first_image = obj.images.first()
         if first_image:
+            # If it's already a full URL (starts with http), return as-is
+            if str(first_image.image).startswith(("http://", "https://")):
+                return str(first_image.image)
+            # Otherwise, build the full URL for local files
             return self.context["request"].build_absolute_uri(first_image.image.url)
 
         return None

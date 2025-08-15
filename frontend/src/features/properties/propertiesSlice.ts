@@ -24,6 +24,7 @@ export interface Property {
   square_feet: number;
   lot_size?: number;
   year_built?: number;
+  parking_spaces?: number;
   property_type: number;
   property_type_name: string;
   status: "available" | "pending" | "sold" | "off_market";
@@ -96,18 +97,25 @@ export const fetchProperties = createAsyncThunk(
       // Handle GeoJSON format response
       const data = response.data;
       let properties = [];
-      
+
+      console.log("Properties API response:", data);
+
       if (data.results && data.results.features) {
         // GeoJSON format - extract properties from features
-        properties = data.results.features.map((feature: any) => ({
-          ...feature.properties,
-          id: feature.properties.id,
-          location: feature.geometry,
-        }));
+        properties = data.results.features.map((feature: any) => {
+          return {
+            ...feature.properties,
+            id: feature.id, // ID is at the top level of the feature
+            location: feature.geometry,
+          };
+        });
       } else if (Array.isArray(data.results)) {
         // Standard pagination format
         properties = data.results;
+        console.log("Using standard format, properties:", properties);
       }
+
+      console.log("Final processed properties:", properties);
 
       return {
         properties,
@@ -130,23 +138,23 @@ export const fetchFeaturedProperties = createAsyncThunk(
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/properties/?ordering=-created_at&limit=6`
       );
-      
+
       // Handle GeoJSON format response
       const data = response.data;
       let properties = [];
-      
+
       if (data.results && data.results.features) {
         // GeoJSON format - extract properties from features
         properties = data.results.features.map((feature: any) => ({
           ...feature.properties,
-          id: feature.properties.id,
+          id: feature.id, // ID is at the top level of the feature
           location: feature.geometry,
         }));
       } else if (Array.isArray(data.results)) {
         // Standard pagination format
         properties = data.results;
       }
-      
+
       return properties;
     } catch (error: any) {
       return rejectWithValue(
@@ -165,8 +173,24 @@ export const fetchPropertyById = createAsyncThunk(
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/properties/${id}/`
       );
-      return response.data;
+
+      console.log("Property API Response:", response.data);
+
+      // Handle potential GeoJSON format
+      const data = response.data;
+      if (data.type === "Feature" && data.properties) {
+        // GeoJSON format - extract properties and add location
+        return {
+          ...data.properties,
+          id: data.id, // ID is at the top level of the feature
+          location: data.geometry,
+        };
+      }
+
+      // Standard format
+      return data;
     } catch (error: any) {
+      console.error("Property fetch error:", error);
       return rejectWithValue(
         error.response?.data || { detail: "Failed to fetch property" }
       );
@@ -174,84 +198,89 @@ export const fetchPropertyById = createAsyncThunk(
   }
 );
 
-// Properties slice
-export const propertiesSlice = createSlice({
+// Redux slice
+const propertiesSlice = createSlice({
   name: "properties",
   initialState,
   reducers: {
     clearProperty: (state) => {
       state.property = null;
     },
+    clearError: (state) => {
+      state.error = null;
+    },
     resetProperties: (state) => {
       state.properties = [];
       state.page = 1;
       state.hasMore = false;
+      state.totalCount = 0;
     },
   },
   extraReducers: (builder) => {
-    // Fetch properties
-    builder.addCase(fetchProperties.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchProperties.fulfilled, (state, action) => {
-      state.isLoading = false;
+    builder
+      // Fetch properties
+      .addCase(fetchProperties.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchProperties.fulfilled,
+        (state, action: PayloadAction<any>) => {
+          state.isLoading = false;
+          const { properties, totalCount, page } = action.payload;
 
-      // If it's the first page, replace all properties
-      // Otherwise append to existing properties
-      if (action.payload.page === 1) {
-        state.properties = action.payload.properties;
-      } else {
-        state.properties = [...state.properties, ...action.payload.properties];
-      }
+          if (page === 1) {
+            state.properties = properties;
+          } else {
+            state.properties = [...state.properties, ...properties];
+          }
 
-      state.totalCount = action.payload.totalCount;
-      state.page = action.payload.page;
-      state.hasMore = state.properties.length < state.totalCount;
-    });
-    builder.addCase(fetchProperties.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload as string;
-      // Ensure properties remains an array even on error
-      if (!Array.isArray(state.properties)) {
-        state.properties = [];
-      }
-    });
-
-    // Fetch featured properties
-    builder.addCase(fetchFeaturedProperties.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchFeaturedProperties.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.featuredProperties = action.payload;
-    });
-    builder.addCase(fetchFeaturedProperties.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload as string;
-      // Ensure featuredProperties remains an array even on error
-      if (!Array.isArray(state.featuredProperties)) {
-        state.featuredProperties = [];
-      }
-    });
-
-    // Fetch property by ID
-    builder.addCase(fetchPropertyById.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchPropertyById.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.property = action.payload;
-    });
-    builder.addCase(fetchPropertyById.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload as string;
-    });
+          state.totalCount = totalCount;
+          state.page = page;
+          state.hasMore = state.properties.length < totalCount;
+        }
+      )
+      .addCase(fetchProperties.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch featured properties
+      .addCase(fetchFeaturedProperties.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchFeaturedProperties.fulfilled,
+        (state, action: PayloadAction<Property[]>) => {
+          state.isLoading = false;
+          state.featuredProperties = action.payload;
+        }
+      )
+      .addCase(fetchFeaturedProperties.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch property by ID
+      .addCase(fetchPropertyById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchPropertyById.fulfilled,
+        (state, action: PayloadAction<Property>) => {
+          state.isLoading = false;
+          state.property = action.payload;
+        }
+      )
+      .addCase(fetchPropertyById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.property = null;
+      });
   },
 });
 
-export const { clearProperty, resetProperties } = propertiesSlice.actions;
+export const { clearProperty, clearError, resetProperties } =
+  propertiesSlice.actions;
 
 export default propertiesSlice.reducer;

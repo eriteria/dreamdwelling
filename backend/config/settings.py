@@ -161,8 +161,8 @@ REST_FRAMEWORK = {
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React frontend
-    "http://localhost:3000",  # React frontend (alternative port)
+    "http://localhost:3000",  # Next.js frontend (default port)
+    "http://localhost:3001",  # Next.js frontend (alternative port)
 ]
 
 # Additional CORS settings for better compatibility

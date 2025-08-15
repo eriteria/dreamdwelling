@@ -5,12 +5,14 @@ Thank you for your interest in contributing to DreamDwelling! This document prov
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL with PostGIS extension
 - Git
 
 ### Development Setup
+
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/yourusername/dreamdwelling.git`
 3. Follow the setup instructions in the README.md
@@ -19,18 +21,21 @@ Thank you for your interest in contributing to DreamDwelling! This document prov
 ## 📋 Development Guidelines
 
 ### Code Style
+
 - **Python**: Follow PEP 8 guidelines
 - **JavaScript/TypeScript**: Use Prettier and ESLint configurations
 - **Commit Messages**: Use conventional commit format
 - **Documentation**: Update README.md for significant changes
 
 ### Testing
+
 - Write tests for new features
 - Ensure existing tests pass
 - Frontend: Use Jest and React Testing Library
 - Backend: Use Django's built-in testing framework
 
 ### Pull Request Process
+
 1. Update documentation as needed
 2. Add tests for new functionality
 3. Ensure all tests pass
@@ -40,6 +45,7 @@ Thank you for your interest in contributing to DreamDwelling! This document prov
 ## 🏗️ Project Structure
 
 ### Backend (Django)
+
 - `config/` - Project settings and configuration
 - `users/` - User authentication and profiles
 - `properties/` - Property management
@@ -49,6 +55,7 @@ Thank you for your interest in contributing to DreamDwelling! This document prov
 - `analytics/` - Usage analytics
 
 ### Frontend (Next.js)
+
 - `src/components/` - Reusable UI components
 - `src/pages/` - Next.js pages
 - `src/features/` - Redux slices and API logic
@@ -58,19 +65,23 @@ Thank you for your interest in contributing to DreamDwelling! This document prov
 ## 🎯 Areas for Contribution
 
 ### High Priority
+
 - Property search and filtering improvements
 - Map integration enhancements
 - Mobile responsiveness optimizations
 - Performance improvements
 
 ### Features Needed
+
 - Advanced property comparison tools
 - Real-time notifications
 - Property valuation algorithms
 - Integration with external APIs
 
 ### Bug Reports
+
 When reporting bugs, please include:
+
 - Operating system and version
 - Browser and version (for frontend issues)
 - Python version (for backend issues)
@@ -81,6 +92,7 @@ When reporting bugs, please include:
 ## 🔍 Code Review Process
 
 All contributions go through code review:
+
 1. Automated checks (linting, tests)
 2. Manual review by maintainers
 3. Address feedback if needed

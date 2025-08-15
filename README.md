@@ -10,30 +10,35 @@ A full-stack real estate application with GIS capabilities, featuring property l
 ## ✨ Features
 
 ### 🔐 **Authentication & User Management**
+
 - Modern user profile dropdown with avatar support
 - JWT-based authentication with automatic token refresh
 - Comprehensive user dashboard and settings
 - Profile management with image upload support
 
 ### 🗺️ **GIS & Mapping**
+
 - PostGIS spatial database integration
 - Interactive property maps
 - Location-based property search
 - Neighborhood analytics and insights
 
 ### 🏘️ **Property Management**
+
 - Advanced property listings with detailed information
 - Image galleries and virtual tours
 - Favorites system for saved properties
 - Agent-specific property management tools
 
 ### 🔍 **Search & Discovery**
+
 - Advanced search filters (price, location, type, etc.)
 - Map-based property discovery
 - Neighborhood exploration tools
 - Real-time search suggestions
 
 ### 📱 **Modern UI/UX**
+
 - Responsive design for all devices
 - Professional interface following Apple design principles
 - Smooth animations and transitions
@@ -42,6 +47,7 @@ A full-stack real estate application with GIS capabilities, featuring property l
 ## 🛠️ Tech Stack
 
 ### **Backend**
+
 - **Django 5.2.5** - Python web framework
 - **PostGIS** - Spatial database extension for PostgreSQL
 - **Django REST Framework** - API development
@@ -50,6 +56,7 @@ A full-stack real estate application with GIS capabilities, featuring property l
 - **Swagger/OpenAPI** - API documentation
 
 ### **Frontend**
+
 - **Next.js 14.0.3** - React framework with Pages Router
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
@@ -57,6 +64,7 @@ A full-stack real estate application with GIS capabilities, featuring property l
 - **Axios** - HTTP client for API calls
 
 ### **Database & Infrastructure**
+
 - **PostgreSQL** with **PostGIS** extension
 - **Cookie-based** session management
 - **CORS** enabled for cross-origin requests
@@ -64,18 +72,21 @@ A full-stack real estate application with GIS capabilities, featuring property l
 ## 🚀 Quick Start
 
 ### **Prerequisites**
+
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL with PostGIS extension
 - Git
 
 ### **1. Clone the Repository**
+
 ```bash
 git clone https://github.com/eriteria/dreamdwelling.git
 cd dreamdwelling
 ```
 
 ### **2. Backend Setup**
+
 ```bash
 # Create and activate virtual environment
 python -m venv venv
@@ -101,6 +112,7 @@ python manage.py runserver
 ```
 
 ### **3. Frontend Setup**
+
 ```bash
 # Install dependencies
 cd frontend
@@ -115,7 +127,9 @@ npm run dev
 ```
 
 ### **4. Quick Development Start**
+
 Use our unified development script to start both servers:
+
 ```bash
 # Windows PowerShell
 .\run-dev-unified.ps1
@@ -163,6 +177,7 @@ dreamdwelling/
 ## 🌐 API Documentation
 
 Once the backend is running, visit:
+
 - **Swagger UI**: http://localhost:8000/swagger/
 - **ReDoc**: http://localhost:8000/redoc/
 - **Django Admin**: http://localhost:8000/admin/
@@ -179,23 +194,27 @@ Once the backend is running, visit:
 ## 🎯 Key Features Implemented
 
 ### ✅ **Authentication System**
+
 - Modern user profile dropdown with avatar
 - Automatic user data loading on app startup
 - Persistent authentication across page loads
 - Secure JWT token management
 
 ### ✅ **User Interface**
+
 - Professional dropdown menu with user actions
 - Responsive design for desktop and mobile
 - Loading states and smooth animations
 - Complete user page ecosystem (Dashboard, Profile, Settings)
 
 ### ✅ **GIS Integration**
+
 - PostGIS spatial database for location data
 - Geographic property searches
 - Neighborhood analytics
 
 ### ✅ **Development Experience**
+
 - Cross-platform development scripts
 - Unified server management
 - Comprehensive error handling
@@ -227,7 +246,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*Built with ❤️ for modern real estate needs*
+_Built with ❤️ for modern real estate needs_
 
 ### Frontend Setup
 

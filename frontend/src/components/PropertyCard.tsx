@@ -56,6 +56,17 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               alt={`${property.title}`}
               fill
               className="object-cover"
+              unoptimized
+              priority
+            />
+          ) : property.primary_image ? (
+            <Image
+              src={property.primary_image}
+              alt={`${property.title}`}
+              fill
+              className="object-cover"
+              unoptimized
+              priority
             />
           ) : (
             <div className="h-full w-full bg-gray-200 flex items-center justify-center">
@@ -112,7 +123,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </h3>
           </div>
 
-          <p className="text-gray-500 text-sm mb-2">{property.address}</p>
+          <p className="text-gray-500 text-sm mb-2">
+            {property.address_line1}, {property.city}, {property.state}{" "}
+            {property.zip_code}
+          </p>
 
           <p className="text-2xl font-bold text-blue-600 mb-2">
             {formatPrice(property.price)}
