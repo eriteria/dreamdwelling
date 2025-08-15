@@ -33,7 +33,9 @@ export default function MyPropertiesPage() {
               <div className="px-6 py-8">
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">
+                    Loading...
+                  </span>
                 </div>
               </div>
             </div>

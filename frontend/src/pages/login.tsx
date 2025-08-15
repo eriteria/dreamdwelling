@@ -54,7 +54,9 @@ export default function LoginPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 transition-colors duration-300">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white transition-colors duration-300">Welcome Back</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
+              Welcome Back
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2 transition-colors duration-300">
               Log in to your DreamDwelling account
             </p>

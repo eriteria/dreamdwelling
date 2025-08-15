@@ -29,7 +29,9 @@ export default function ProfilePage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-300">
             <div className="px-6 py-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors duration-300">Profile</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors duration-300">
+                Profile
+              </h1>
 
               <div className="space-y-6">
                 <div className="flex items-center space-x-6">
@@ -41,7 +43,9 @@ export default function ProfilePage() {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
                       {user?.first_name} {user?.last_name}
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">{user?.email}</p>
+                    <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">
+                      {user?.email}
+                    </p>
                   </div>
                 </div>
 

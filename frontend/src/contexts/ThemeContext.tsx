@@ -70,11 +70,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Prevent hydration mismatch by not rendering theme-dependent content until hydrated
   if (!isHydrated) {
     return (
-      <ThemeContext.Provider value={{
-        theme: "light", // Always use light theme during SSR to match initial state
-        toggleTheme,
-        setTheme: handleSetTheme,
-      }}>
+      <ThemeContext.Provider
+        value={{
+          theme: "light", // Always use light theme during SSR to match initial state
+          toggleTheme,
+          setTheme: handleSetTheme,
+        }}
+      >
         {children}
       </ThemeContext.Provider>
     );

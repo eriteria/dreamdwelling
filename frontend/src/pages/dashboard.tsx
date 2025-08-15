@@ -56,7 +56,9 @@ export default function DashboardPage() {
               <p className="text-3xl font-bold text-purple-600 mt-2">0</p>
             </div>
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow transition-colors duration-300">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white transition-colors duration-300">Messages</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white transition-colors duration-300">
+                Messages
+              </h3>
               <p className="text-3xl font-bold text-orange-600 mt-2">0</p>
             </div>
           </div>
