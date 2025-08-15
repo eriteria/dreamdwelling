@@ -33,7 +33,9 @@ export default function ProfilePage() {
               <div className="px-6 py-8">
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading profile...</span>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">
+                    Loading profile...
+                  </span>
                 </div>
               </div>
             </div>
@@ -109,7 +111,9 @@ export default function ProfilePage() {
                       </dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 transition-colors duration-300">Bio</dt>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                        Bio
+                      </dt>
                       <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 transition-colors duration-300">
                         {user?.bio || "No bio provided"}
                       </dd>
