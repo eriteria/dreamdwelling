@@ -51,7 +51,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <div
-      className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-gray-900/70"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -76,15 +76,17 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               priority
             />
           ) : (
-            <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image available</span>
+            <div className="h-full w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-gray-400 dark:text-gray-500">
+                No image available
+              </span>
             </div>
           )}
 
           {/* Favorite button */}
           <button
             onClick={toggleFavorite}
-            className="absolute top-3 right-3 z-10 bg-white p-1.5 rounded-full shadow-md transition-transform duration-300 hover:scale-110"
+            className="absolute top-3 right-3 z-10 bg-white dark:bg-gray-800 p-1.5 rounded-full shadow-md dark:shadow-gray-900/50 transition-all duration-300 hover:scale-110"
           >
             {isFavorite ? (
               <svg
@@ -125,24 +127,26 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
         <div className="p-4">
           <div className="flex justify-between items-start">
-            <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1 line-clamp-1 transition-colors duration-200">
               {property.title}
             </h3>
           </div>
 
-          <p className="text-gray-500 text-sm mb-2">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 transition-colors duration-200">
             {property.address_line1}, {property.city}, {property.state}{" "}
             {property.zip_code}
           </p>
 
-          <p className="text-2xl font-bold text-blue-600 mb-2">
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2 transition-colors duration-200">
             {formatPrice(property.price)}
             {property.listing_type === "rent" && (
-              <span className="text-sm text-gray-500">/month</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                /month
+              </span>
             )}
           </p>
 
-          <div className="flex justify-between text-gray-600 text-sm">
+          <div className="flex justify-between text-gray-600 dark:text-gray-400 text-sm transition-colors duration-200">
             <div className="flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

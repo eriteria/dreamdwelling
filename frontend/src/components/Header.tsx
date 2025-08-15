@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logout } from "@/features/auth/authSlice";
+import DarkModeToggle from "./DarkModeToggle";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -68,13 +69,13 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800 transition-colors duration-200">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 DreamDwelling
               </span>
             </Link>
@@ -84,36 +85,40 @@ export default function Header() {
           <nav className="hidden md:flex space-x-8">
             <Link
               href="/"
-              className={`nav-link ${
-                router.pathname === "/" ? "text-blue-600" : "text-gray-600"
+              className={`nav-link transition-colors duration-200 ${
+                router.pathname === "/"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
               }`}
             >
               Home
             </Link>
             <Link
               href="/properties"
-              className={`nav-link ${
+              className={`nav-link transition-colors duration-200 ${
                 router.pathname === "/properties"
-                  ? "text-blue-600"
-                  : "text-gray-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
               }`}
             >
               Properties
             </Link>
             <Link
               href="/map"
-              className={`nav-link ${
-                router.pathname === "/map" ? "text-blue-600" : "text-gray-600"
+              className={`nav-link transition-colors duration-200 ${
+                router.pathname === "/map"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
               }`}
             >
               Map View
             </Link>
             <Link
               href="/neighborhoods"
-              className={`nav-link ${
+              className={`nav-link transition-colors duration-200 ${
                 router.pathname === "/neighborhoods"
-                  ? "text-blue-600"
-                  : "text-gray-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
               }`}
             >
               Neighborhoods
@@ -121,25 +126,28 @@ export default function Header() {
           </nav>
 
           {/* User Nav */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center space-x-2">
+            {/* Dark Mode Toggle */}
+            <DarkModeToggle />
+
             {!isHydrated ? (
               // Show loading state during hydration
               <div className="flex space-x-4">
-                <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
-                <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-16 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               </div>
             ) : isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link
                   href="/favorites"
-                  className="text-gray-600 hover:text-blue-600"
+                  className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                 >
                   Saved Properties
                 </Link>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                     aria-expanded={isUserDropdownOpen}
                     aria-haspopup="true"
                   >
@@ -156,11 +164,11 @@ export default function Header() {
                         </div>
                       )}
                     </div>
-                    <span className="text-gray-700 font-medium hidden lg:block">
+                    <span className="text-gray-700 dark:text-gray-200 font-medium hidden lg:block">
                       {getUserDisplayName()}
                     </span>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                      className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${
                         isUserDropdownOpen ? "rotate-180" : ""
                       }`}
                       fill="none"
@@ -178,8 +186,8 @@ export default function Header() {
 
                   {/* User Dropdown Menu */}
                   {isUserDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <div className="flex items-center space-x-3">
                           {user?.profile_picture ? (
                             <img
@@ -188,15 +196,15 @@ export default function Header() {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                            <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
                               {getUserInitials()}
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                               {getUserDisplayName()}
                             </p>
-                            <p className="text-sm text-gray-500 truncate">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                               {user?.email}
                             </p>
                           </div>
@@ -206,7 +214,7 @@ export default function Header() {
                       <div className="py-1">
                         <Link
                           href="/dashboard"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
                           <svg

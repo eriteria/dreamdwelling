@@ -86,12 +86,12 @@ export default function SearchFilter() {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6">
+    <div className="bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 rounded-lg p-6 transition-colors duration-200">
       <form onSubmit={handleSubmit}>
         <div className="mb-6">
           <label
             htmlFor="location"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
           >
             Location
           </label>
@@ -102,15 +102,15 @@ export default function SearchFilter() {
               value={location}
               onChange={handleLocationChange}
               onFocus={() => setShowLocations(true)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
               placeholder="City, State, or Zip Code"
             />
             {showLocations && locations.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md overflow-y-auto max-h-60">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 shadow-lg dark:shadow-gray-900/50 rounded-md overflow-y-auto max-h-60 border dark:border-gray-600">
                 {locations.map((loc, index) => (
                   <div
                     key={index}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                    className="px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-gray-100 transition-colors duration-200"
                     onClick={() => handleLocationSelect(loc)}
                   >
                     {loc.display}
@@ -125,7 +125,7 @@ export default function SearchFilter() {
           <div>
             <label
               htmlFor="min_price"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
             >
               Min Price
             </label>
@@ -135,14 +135,14 @@ export default function SearchFilter() {
               type="number"
               value={localFilters.min_price || ""}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
               placeholder="Min $"
             />
           </div>
           <div>
             <label
               htmlFor="max_price"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
             >
               Max Price
             </label>
@@ -152,7 +152,7 @@ export default function SearchFilter() {
               type="number"
               value={localFilters.max_price || ""}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
               placeholder="Max $"
             />
           </div>
@@ -162,7 +162,7 @@ export default function SearchFilter() {
           <div>
             <label
               htmlFor="min_bedrooms"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
             >
               Bedrooms (min)
             </label>
@@ -171,7 +171,7 @@ export default function SearchFilter() {
               name="min_bedrooms"
               value={localFilters.min_bedrooms || ""}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
             >
               <option value="">Any</option>
               <option value="1">1+</option>
@@ -184,7 +184,7 @@ export default function SearchFilter() {
           <div>
             <label
               htmlFor="min_bathrooms"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
             >
               Bathrooms (min)
             </label>
@@ -193,7 +193,7 @@ export default function SearchFilter() {
               name="min_bathrooms"
               value={localFilters.min_bathrooms || ""}
               onChange={handleFilterChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
             >
               <option value="">Any</option>
               <option value="1">1+</option>
@@ -210,7 +210,7 @@ export default function SearchFilter() {
         <div className="mb-6">
           <label
             htmlFor="property_type"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
           >
             Property Type
           </label>
@@ -219,7 +219,7 @@ export default function SearchFilter() {
             name="property_type"
             value={localFilters.property_type || ""}
             onChange={handleFilterChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
           >
             <option value="">Any</option>
             <option value="11">Single Family Home</option>
@@ -238,7 +238,7 @@ export default function SearchFilter() {
         <div className="mb-6">
           <label
             htmlFor="listing_type"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200"
           >
             Listing Type
           </label>
@@ -247,7 +247,7 @@ export default function SearchFilter() {
             name="listing_type"
             value={localFilters.listing_type || ""}
             onChange={handleFilterChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors duration-200"
           >
             <option value="">Any</option>
             <option value="sale">For Sale</option>
@@ -258,14 +258,14 @@ export default function SearchFilter() {
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="flex-1 px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200"
           >
             Search
           </button>
           <button
             type="button"
             onClick={handleClear}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="px-6 py-3 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200"
           >
             Clear
           </button>

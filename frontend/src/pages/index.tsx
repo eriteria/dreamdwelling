@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import SearchFilter from "@/components/SearchFilter";
+import PropertyCard from "@/components/PropertyCard";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { fetchFeaturedProperties } from "@/features/properties/propertiesSlice";
 
 export default function HomePage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState("");
+  const { featuredProperties, isLoading } = useAppSelector(
+    (state) => state.properties
+  );
+
+  // Fetch featured properties when component mounts
+  useEffect(() => {
+    dispatch(fetchFeaturedProperties());
+  }, [dispatch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,97 +115,39 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            {/* Property Card 1 */}
-            <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="h-64 bg-gradient-to-br from-blue-100 to-purple-100 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-2xl font-light mb-2">Modern Villa</div>
-                    <div className="text-sm opacity-80">
-                      4 bed • 3 bath • $750,000
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-700 rounded-2xl overflow-hidden shadow-sm"
+                >
+                  <div className="h-64 bg-gray-200 dark:bg-gray-600 animate-pulse"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-4 animate-pulse"></div>
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-24 animate-pulse"></div>
+                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  Luxury Downtown Villa
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Stunning contemporary home with panoramic city views
+              ))
+            ) : featuredProperties.length > 0 ? (
+              // Real featured properties
+              featuredProperties
+                .slice(0, 3)
+                .map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))
+            ) : (
+              // No properties fallback
+              <div className="col-span-3 text-center py-12">
+                <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                  No featured properties available at the moment.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-light text-gray-900">
-                    $750,000
-                  </span>
-                  <button className="text-blue-600 font-medium hover:text-blue-700">
-                    View Details
-                  </button>
-                </div>
               </div>
-            </div>
-
-            {/* Property Card 2 */}
-            <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="h-64 bg-gradient-to-br from-green-100 to-teal-100 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-2xl font-light mb-2">
-                      Garden Estate
-                    </div>
-                    <div className="text-sm opacity-80">
-                      5 bed • 4 bath • $950,000
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  Suburban Garden Estate
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Spacious family home with landscaped gardens
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-light text-gray-900">
-                    $950,000
-                  </span>
-                  <button className="text-blue-600 font-medium hover:text-blue-700">
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Property Card 3 */}
-            <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="h-64 bg-gradient-to-br from-orange-100 to-red-100 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-2xl font-light mb-2">Beach House</div>
-                    <div className="text-sm opacity-80">
-                      3 bed • 2 bath • $680,000
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  Coastal Beach House
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Charming oceanfront property with private beach access
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-light text-gray-900">
-                    $680,000
-                  </span>
-                  <button className="text-blue-600 font-medium hover:text-blue-700">
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="text-center">

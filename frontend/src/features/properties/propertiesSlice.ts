@@ -149,9 +149,9 @@ export const fetchFeaturedProperties = createAsyncThunk(
   "properties/fetchFeaturedProperties",
   async (_, { rejectWithValue }) => {
     try {
-      // Featured properties could be newest, most viewed, or have special flag
+      // Featured properties based on popularity (favorites and views)
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/properties/?ordering=-created_at&limit=6`
+        `${process.env.NEXT_PUBLIC_API_URL}/properties/?ordering=-favorites_count,-views_count&limit=6`
       );
 
       // Handle GeoJSON format response
