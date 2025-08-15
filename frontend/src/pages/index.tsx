@@ -40,16 +40,16 @@ export default function HomePage() {
       </Head>
 
       {/* Hero Section - Apple-inspired minimalist design */}
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
         <div className="container mx-auto px-6 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl md:text-7xl font-light text-gray-900 mb-8 tracking-tight">
+            <h1 className="text-6xl md:text-7xl font-light text-gray-900 dark:text-white mb-8 tracking-tight transition-colors duration-300">
               Find Your
               <span className="block font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Dream Home
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto font-light leading-relaxed transition-colors duration-300">
               Discover exceptional properties with our intelligent search
               platform.
               <br className="hidden md:block" />
@@ -62,8 +62,8 @@ export default function HomePage() {
 
             {/* Scroll indicator */}
             <div className="animate-bounce mt-20">
-              <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
-                <div className="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
+              <div className="w-6 h-10 border-2 border-gray-400 dark:border-gray-500 rounded-full flex justify-center transition-colors duration-300">
+                <div className="w-1 h-3 bg-gray-400 dark:bg-gray-500 rounded-full mt-2 animate-pulse transition-colors duration-300"></div>
               </div>
             </div>
           </div>
@@ -71,45 +71,53 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-light text-gray-900 mb-2">
+              <div className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-2 transition-colors duration-300">
                 10k+
               </div>
-              <div className="text-gray-600 font-medium">Properties Listed</div>
+              <div className="text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">
+                Properties Listed
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-light text-gray-900 mb-2">
+              <div className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-2 transition-colors duration-300">
                 5k+
               </div>
-              <div className="text-gray-600 font-medium">Happy Families</div>
+              <div className="text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">
+                Happy Families
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-light text-gray-900 mb-2">
+              <div className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-2 transition-colors duration-300">
                 200+
               </div>
-              <div className="text-gray-600 font-medium">Cities Covered</div>
+              <div className="text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">
+                Cities Covered
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-light text-gray-900 mb-2">
+              <div className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-2 transition-colors duration-300">
                 24/7
               </div>
-              <div className="text-gray-600 font-medium">Expert Support</div>
+              <div className="text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">
+                Expert Support
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Featured Properties - Clean card design */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-6 transition-colors duration-300">
               Featured Properties
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto transition-colors duration-300">
               Handpicked properties that showcase the best of what we offer
             </p>
           </div>
@@ -153,7 +161,7 @@ export default function HomePage() {
           <div className="text-center">
             <Link
               href="/properties"
-              className="inline-flex items-center px-8 py-4 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium rounded-full hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-300"
             >
               Explore All Properties
               <svg
@@ -175,22 +183,22 @@ export default function HomePage() {
       </section>
 
       {/* How It Works - Apple-style process */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-6 transition-colors duration-300">
               Simple. Powerful. Effective.
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto transition-colors duration-300">
               Finding your dream home has never been easier
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
             <div className="text-center group">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-blue-200 transition-colors">
+              <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors duration-300">
                 <svg
-                  className="w-10 h-10 text-blue-600"
+                  className="w-10 h-10 text-blue-600 dark:text-blue-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -203,17 +211,19 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-light text-gray-900 mb-4">Search</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-2xl font-light text-gray-900 dark:text-white mb-4 transition-colors duration-300">
+                Search
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
                 Use our intelligent search to discover properties that match
                 your exact criteria and preferences.
               </p>
             </div>
 
             <div className="text-center group">
-              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-purple-200 transition-colors">
+              <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors duration-300">
                 <svg
-                  className="w-10 h-10 text-purple-600"
+                  className="w-10 h-10 text-purple-600 dark:text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -232,19 +242,19 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-light text-gray-900 mb-4">
+              <h3 className="text-2xl font-light text-gray-900 dark:text-white mb-4 transition-colors duration-300">
                 Explore
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
                 Take virtual tours, view detailed photos, and explore
                 neighborhoods to find your perfect match.
               </p>
             </div>
 
             <div className="text-center group">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-green-200 transition-colors">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors duration-300">
                 <svg
-                  className="w-10 h-10 text-green-600"
+                  className="w-10 h-10 text-green-600 dark:text-green-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -257,10 +267,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-light text-gray-900 mb-4">
+              <h3 className="text-2xl font-light text-gray-900 dark:text-white mb-4 transition-colors duration-300">
                 Connect
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
                 Connect with trusted agents and schedule viewings with just a
                 few taps. We handle the rest.
               </p>
