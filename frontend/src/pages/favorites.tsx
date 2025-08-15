@@ -34,14 +34,33 @@ export default function FavoritesPage() {
     }
   }, [dispatch, isAuthenticated, isHydrated]);
 
-  // Don't render anything until hydration is complete
-  if (!isHydrated) {
-    return null;
-  }
-
-  // Redirect if not logged in
-  if (!isAuthenticated) {
-    return null; // Prevent rendering while redirecting
+  // Show loading state during SSR and initial hydration to prevent mismatch
+  if (!isHydrated || !isAuthenticated) {
+    return (
+      <Layout>
+        <Head>
+          <title>Saved Properties | DreamDwelling</title>
+          <meta
+            name="description"
+            content="View your saved properties and favorites"
+          />
+        </Head>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-300">
+              <div className="px-6 py-8">
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">
+                    Loading favorites...
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
