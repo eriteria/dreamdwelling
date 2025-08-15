@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Layout from "@/components/Layout";
@@ -9,25 +9,37 @@ import { fetchFavorites } from "@/features/favorites/favoritesSlice";
 export default function FavoritesPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [isHydrated, setIsHydrated] = useState(false);
   const { favorites, loading, error } = useAppSelector(
     (state) => state.favorites
   );
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  // Redirect if not logged in
+  // Handle hydration
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsHydrated(true);
+  }, []);
+
+  // Redirect if not logged in (only after hydration)
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isHydrated]);
 
-  // Fetch favorites when component mounts
+  // Fetch favorites when component mounts (only after hydration)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isHydrated && isAuthenticated) {
       dispatch(fetchFavorites());
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, isHydrated]);
 
+  // Don't render anything until hydration is complete
+  if (!isHydrated) {
+    return null;
+  }
+
+  // Redirect if not logged in
   if (!isAuthenticated) {
     return null; // Prevent rendering while redirecting
   }

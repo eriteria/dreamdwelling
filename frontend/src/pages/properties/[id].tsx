@@ -44,15 +44,22 @@ export default function PropertyDetailPage() {
   }, [property, isLoading, error]);
 
   const handleFavoriteToggle = () => {
+    console.log("handleFavoriteToggle called for property:", property?.id);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("isFavorite:", isFavorite);
+
     if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
       router.push("/login");
       return;
     }
 
     if (property) {
       if (isFavorite) {
+        console.log("Removing favorite for property:", property.id);
         dispatch(removeFavorite(property.id));
       } else {
+        console.log("Adding favorite for property:", property.id);
         dispatch(addFavorite(property.id));
       }
     }

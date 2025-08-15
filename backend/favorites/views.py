@@ -3,6 +3,7 @@ Views for favorites app.
 """
 
 from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Favorite, SavedSearch
@@ -46,6 +47,28 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(favorite)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=False, methods=["delete"], url_path="property/(?P<property_id>[^/.]+)"
+    )
+    def delete_by_property(self, request, property_id=None):
+        """Remove a favorite by property ID."""
+        try:
+            property_instance = get_object_or_404(Property, id=property_id)
+            favorite = Favorite.objects.filter(
+                user=request.user, property=property_instance
+            ).first()
+
+            if not favorite:
+                return Response(
+                    {"detail": "Favorite not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SavedSearchViewSet(viewsets.ModelViewSet):

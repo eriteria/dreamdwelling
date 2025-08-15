@@ -22,14 +22,21 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
+    console.log("toggleFavorite called for property:", property.id);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("isFavorite:", isFavorite);
+
     if (!isAuthenticated) {
+      console.log("User not authenticated, should redirect to login");
       // Redirect to login or show login modal
       return;
     }
 
     if (isFavorite) {
+      console.log("Removing favorite for property:", property.id);
       dispatch(removeFavorite(property.id));
     } else {
+      console.log("Adding favorite for property:", property.id);
       dispatch(addFavorite(property.id));
     }
   };

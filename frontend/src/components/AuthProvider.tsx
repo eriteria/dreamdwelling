@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { fetchUser } from "@/features/auth/authSlice";
+import { fetchFavorites } from "@/features/favorites/favoritesSlice";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -25,6 +26,11 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     // If we have a token but no user data, fetch the user
     if (token && !user && isAuthenticated) {
       dispatch(fetchUser());
+    }
+
+    // If user is authenticated, fetch their favorites
+    if (isAuthenticated && token) {
+      dispatch(fetchFavorites());
     }
   }, [dispatch, token, user, isAuthenticated, isHydrated]);
 
