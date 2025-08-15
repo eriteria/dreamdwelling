@@ -58,7 +58,7 @@ export default function PropertiesPage() {
       </Head>
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 transition-colors duration-300">
           Find Your Perfect Property
         </h1>
 
@@ -74,7 +74,7 @@ export default function PropertiesPage() {
           <main className="lg:col-span-3">
             {/* Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <p className="text-gray-600 mb-4 sm:mb-0">
+              <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-0 transition-colors duration-300">
                 Showing{" "}
                 <span className="font-semibold">{properties?.length || 0}</span>{" "}
                 properties
@@ -85,10 +85,10 @@ export default function PropertiesPage() {
                 <div className="flex rounded-md shadow-sm">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`px-4 py-2 text-sm font-medium rounded-l-md ${
+                    className={`px-4 py-2 text-sm font-medium rounded-l-md transition-colors duration-300 ${
                       viewMode === "grid"
                         ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-50"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                     }`}
                   >
                     <span className="sr-only">Grid view</span>
@@ -103,10 +103,10 @@ export default function PropertiesPage() {
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`px-4 py-2 text-sm font-medium rounded-r-md ${
+                    className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors duration-300 ${
                       viewMode === "list"
                         ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-50"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                     }`}
                   >
                     <span className="sr-only">List view</span>
@@ -130,7 +130,7 @@ export default function PropertiesPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300"
                   >
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
@@ -149,15 +149,15 @@ export default function PropertiesPage() {
                 </div>
               </div>
             ) : error ? (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md transition-colors duration-300">
                 <p>Error loading properties. Please try again later.</p>
               </div>
             ) : !Array.isArray(properties) || properties.length === 0 ? (
-              <div className="bg-white border border-gray-200 p-6 rounded-lg text-center">
-                <h3 className="text-lg font-medium text-gray-900">
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center transition-colors duration-300">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white transition-colors duration-300">
                   No properties found
                 </h3>
-                <p className="mt-2 text-gray-500">
+                <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">
                   Try adjusting your filters to find more properties.
                 </p>
               </div>

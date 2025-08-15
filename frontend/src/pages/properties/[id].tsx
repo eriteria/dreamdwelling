@@ -92,7 +92,7 @@ export default function PropertyDetailPage() {
         <div className="container mx-auto px-4 py-16 flex justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading property details...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 transition-colors duration-300">Loading property details...</p>
           </div>
         </div>
       </Layout>
@@ -103,11 +103,11 @@ export default function PropertyDetailPage() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md transition-colors duration-300">
             <p>Error loading property details: {error}</p>
             <button
               onClick={() => router.back()}
-              className="mt-2 text-blue-600 underline"
+              className="mt-2 text-blue-600 dark:text-blue-400 underline transition-colors duration-300"
             >
               Go back
             </button>
@@ -123,7 +123,7 @@ export default function PropertyDetailPage() {
         <div className="container mx-auto px-4 py-16 flex justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 transition-colors duration-300">Loading...</p>
           </div>
         </div>
       </Layout>
@@ -142,22 +142,22 @@ export default function PropertyDetailPage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumbs */}
-        <div className="flex text-sm text-gray-500 mb-4">
+        <div className="flex text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
           <span
             onClick={() => router.push("/")}
-            className="cursor-pointer hover:text-blue-600"
+            className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
           >
             Home
           </span>
           <span className="mx-2">/</span>
           <span
             onClick={() => router.push("/properties")}
-            className="cursor-pointer hover:text-blue-600"
+            className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
           >
             Properties
           </span>
           <span className="mx-2">/</span>
-          <span className="text-gray-700">{property?.title || "Property"}</span>
+          <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{property?.title || "Property"}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -248,26 +248,26 @@ export default function PropertyDetailPage() {
                     {property?.bathrooms || 0}
                   </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Area</p>
-                  <p className="text-xl font-semibold">
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                  <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">Area</p>
+                  <p className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">
                     {property?.square_feet || 0} sqft
                   </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Year Built</p>
-                  <p className="text-xl font-semibold">
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                  <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">Year Built</p>
+                  <p className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">
                     {property?.year_built || "N/A"}
                   </p>
                 </div>
               </div>
 
-              <h2 className="text-xl font-semibold mb-3">Description</h2>
-              <p className="text-gray-700 mb-6 whitespace-pre-line">
+              <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-colors duration-300">Description</h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-6 whitespace-pre-line transition-colors duration-300">
                 {property?.description || "Description loading..."}
               </p>
 
-              <h2 className="text-xl font-semibold mb-3">Features</h2>
+              <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-colors duration-300">Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
                 {/* For now, let's show some default features until we fix the feature data structure */}
                 {[
@@ -291,7 +291,7 @@ export default function PropertyDetailPage() {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span>{feature}</span>
+                    <span className="text-gray-900 dark:text-white transition-colors duration-300">{feature}</span>
                   </div>
                 ))}
               </div>
