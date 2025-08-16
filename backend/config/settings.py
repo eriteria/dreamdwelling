@@ -10,6 +10,19 @@ from dotenv import load_dotenv
 # Load environment variables from .env file first so they're available for settings below
 load_dotenv()
 
+# On Windows, prefer explicitly adding OSGeo4W DLL directory instead of putting it on PATH
+# to avoid interfering with the Python runtime (encodings import errors).
+if os.name == "nt":
+    try:
+        # Adjust this path if your OSGeo4W is installed elsewhere
+        os.add_dll_directory(r"C:\OSGeo4W\bin")
+    except (FileNotFoundError, AttributeError):
+        # AttributeError on Python < 3.8 or if add_dll_directory not available
+        pass
+    # Help GDAL/PROJ find their data files
+    os.environ.setdefault("GDAL_DATA", r"C:\OSGeo4W\share\gdal")
+    os.environ.setdefault("PROJ_LIB", r"C:\OSGeo4W\share\proj")
+
 # Configure GeoDjango library paths
 GDAL_LIBRARY_PATH = r"C:\OSGeo4W\bin\gdal311.dll"
 GEOS_LIBRARY_PATH = r"C:\OSGeo4W\bin\geos_c.dll"
@@ -35,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",  # For template filters like intcomma, ordinal, etc.
     "django.contrib.gis",  # For geographic features
     # Third party apps
     "rest_framework",

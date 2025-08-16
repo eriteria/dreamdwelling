@@ -1,11 +1,45 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import Layout from "@/components/Layout";
 import PropertyCard from "@/components/PropertyCard";
 import SearchFilter from "@/components/SearchFilter";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { fetchProperties } from "@/features/properties/propertiesSlice";
+
+// Dynamically import PropertyMap to avoid SSR issues with Leaflet
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex justify-center items-center"
+      style={{ height: "400px" }}
+    >
+      <div className="text-gray-600 dark:text-gray-400">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+        Loading map...
+      </div>
+    </div>
+  ),
+});
+
+// Transform property data for map component
+const transformPropertyForMap = (property: any) => ({
+  id: property.id,
+  title: property.title,
+  price: property.price,
+  latitude: property.location?.coordinates?.[1] || 0,
+  longitude: property.location?.coordinates?.[0] || 0,
+  address: `${property.address_line1}, ${property.city}, ${property.state}`,
+  property_type: property.property_type_name,
+  bedrooms: property.bedrooms,
+  bathrooms: property.bathrooms,
+  square_feet: property.square_feet,
+  listing_type: property.listing_type,
+  primary_image: property.primary_image,
+  status: property.status,
+});
 
 export default function PropertiesPage() {
   const router = useRouter();
@@ -17,7 +51,7 @@ export default function PropertiesPage() {
   } = useAppSelector((state) => state.properties);
   const { filters } = useAppSelector((state) => state.search);
 
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [sortBy, setSortBy] = useState("newest");
 
   // Fetch properties when filters or sort option changes
@@ -103,7 +137,7 @@ export default function PropertiesPage() {
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors duration-300 ${
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                       viewMode === "list"
                         ? "bg-blue-600 text-white"
                         : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -119,6 +153,28 @@ export default function PropertiesPage() {
                       <path
                         fillRule="evenodd"
                         d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("map")}
+                    className={`px-4 py-2 text-sm font-medium rounded-r-md transition-colors duration-300 ${
+                      viewMode === "map"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    <span className="sr-only">Map view</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
                         clipRule="evenodd"
                       />
                     </svg>
@@ -160,6 +216,12 @@ export default function PropertiesPage() {
                 <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">
                   Try adjusting your filters to find more properties.
                 </p>
+              </div>
+            ) : viewMode === "map" ? (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <PropertyMap
+                  properties={properties.map(transformPropertyForMap)}
+                />
               </div>
             ) : (
               <div

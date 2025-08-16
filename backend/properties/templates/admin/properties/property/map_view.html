@@ -1,0 +1,346 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static humanize %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    .container {
+        width: 100%;
+        padding: 0 15px;
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+
+    .col-md-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+
+        .col-md-8,
+        .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    #map {
+        width: 100%;
+        height: 700px;
+        margin-bottom: 20px;
+    }
+
+    .property-list {
+        max-height: 700px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    /* Message for no coordinates */
+    .no-properties-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .property-item {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .property-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .property-item.active {
+        background-color: #e8f4f8;
+        border-color: #79aec8;
+    }
+
+    .property-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .property-address {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 5px;
+    }
+
+    .property-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+
+    .property-price {
+        font-weight: bold;
+        color: #417690;
+    }
+
+    .status-available {
+        color: #28a745;
+    }
+
+    .status-pending {
+        color: #ffc107;
+    }
+
+    .status-sold {
+        color: #dc3545;
+    }
+
+    .filters {
+        background-color: #f8f8f8;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% trans 'Property Map View' %}</h1>
+
+    <div class="filters">
+        <form id="filter-form" method="get">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="">All</option>
+                        <option value="available" {% if filters.status=='available' %}selected{% endif %}>Available
+                        </option>
+                        <option value="pending" {% if filters.status=='pending' %}selected{% endif %}>Pending</option>
+                        <option value="sold" {% if filters.status=='sold' %}selected{% endif %}>Sold</option>
+                        <option value="off_market" {% if filters.status=='off_market' %}selected{% endif %}>Off Market
+                        </option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="listing_type">Listing Type:</label>
+                    <select id="listing_type" name="listing_type" class="form-control">
+                        <option value="">All</option>
+                        <option value="sale" {% if filters.listing_type=='sale' %}selected{% endif %}>For Sale</option>
+                        <option value="rent" {% if filters.listing_type=='rent' %}selected{% endif %}>For Rent</option>
+                        <option value="both" {% if filters.listing_type=='both' %}selected{% endif %}>For Sale & Rent
+                        </option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="min_price">Min Price:</label>
+                    <input type="number" id="min_price" name="min_price" class="form-control" placeholder="Min Price"
+                        value="{{ filters.min_price }}">
+                </div>
+                <div class="filter-group">
+                    <label for="max_price">Max Price:</label>
+                    <input type="number" id="max_price" name="max_price" class="form-control" placeholder="Max Price"
+                        value="{{ filters.max_price }}">
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="min_bedrooms">Min Bedrooms:</label>
+                    <input type="number" id="min_bedrooms" name="min_bedrooms" class="form-control"
+                        placeholder="Min Bedrooms" min="0" value="{{ filters.min_bedrooms }}">
+                </div>
+                <div class="filter-group">
+                    <label for="min_bathrooms">Min Bathrooms:</label>
+                    <input type="number" id="min_bathrooms" name="min_bathrooms" class="form-control"
+                        placeholder="Min Bathrooms" min="0" step="0.5" value="{{ filters.min_bathrooms }}">
+                </div>
+                <div class="filter-group">
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" class="form-control" placeholder="City"
+                        value="{{ filters.city }}">
+                </div>
+                <div class="filter-group">
+                    <label for="state">State:</label>
+                    <input type="text" id="state" name="state" class="form-control" placeholder="State"
+                        value="{{ filters.state }}">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button">Apply Filters</button>
+                <button type="button" id="clear-filters" class="button">Clear Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div id="map"></div>
+        </div>
+        <div class="col-md-4">
+            <h2>{% trans 'Properties' %}</h2>
+            <div class="property-list" id="property-list">
+                {% for property in properties %}
+                <div class="property-item" data-id="{{ property.id }}" data-lat="{{ property.latitude|default:'0' }}"
+                    data-lng="{{ property.longitude|default:'0' }}">
+                    <div class="property-title">{{ property.title }}</div>
+                    <div class="property-address">{{ property.address_line1 }}, {{ property.city }}, {{ property.state
+                        }}</div>
+                    <div class="property-details">
+                        <span>{{ property.bedrooms }} bd | {{ property.bathrooms }} ba | {{ property.square_feet }}
+                            sqft</span>
+                        <span class="property-price">${{ property.price|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="property-status">
+                        <span class="status-{{ property.status }}">{{ property.get_status_display }}</span>
+                        <span> • {{ property.get_listing_type_display }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No properties found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Leaflet map
+        var map = L.map('map').setView([39.8283, -98.5795], 4);
+        var hasValidProperties = false;
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = {};
+        var properties = {{ properties_json| safe
+    }};
+
+    // Add property markers
+    properties.forEach(function (property) {
+        if (property.latitude && property.longitude) {
+            hasValidProperties = true;
+            var marker = L.marker([property.latitude, property.longitude])
+                .addTo(map)
+                .bindPopup(
+                    '<strong>' + property.title + '</strong><br>' +
+                    property.address_line1 + ', ' + property.city + ', ' + property.state + '<br>' +
+                    property.bedrooms + ' bd | ' + property.bathrooms + ' ba | ' + property.square_feet + ' sqft<br>' +
+                    '<strong>$' + property.price.toLocaleString() + '</strong><br>' +
+                    '<a href="/admin/properties/property/' + property.id + '/change/" target="_blank">Edit Property</a>'
+                );
+
+            marker.propertyId = property.id;
+            markers[property.id] = marker;
+
+            marker.on('click', function () {
+                highlightProperty(property.id);
+            });
+        }
+    });
+
+    // Check if we have any properties with valid coordinates
+    if (hasValidProperties) {
+        // Auto-fit map to show all markers
+        var bounds = [];
+        Object.values(markers).forEach(function (marker) {
+            bounds.push([marker._latlng.lat, marker._latlng.lng]);
+        });
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds);
+        }
+    } else {
+        // No valid coordinates, show a message on the map
+        var noPropertiesMsg = L.DomUtil.create('div', 'no-properties-message');
+        noPropertiesMsg.innerHTML = '<p style="text-align: center; padding: 20px;">No properties with coordinates found. Add latitude/longitude to properties to see them on the map.</p>';
+        map.getContainer().appendChild(noPropertiesMsg);
+    }
+
+    // Property list click handler
+    document.querySelectorAll('.property-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            var propertyId = parseInt(this.dataset.id);
+            var marker = markers[propertyId];
+
+            if (marker) {
+                map.setView([marker._latlng.lat, marker._latlng.lng], 14);
+                marker.openPopup();
+                highlightProperty(propertyId);
+            }
+        });
+    });    // Highlight selected property
+    function highlightProperty(propertyId) {
+        document.querySelectorAll('.property-item').forEach(function (item) {
+            item.classList.remove('active');
+            if (parseInt(item.dataset.id) === propertyId) {
+                item.classList.add('active');
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
+    // Clear filters button
+    document.getElementById('clear-filters').addEventListener('click', function () {
+        document.getElementById('filter-form').reset();
+        document.getElementById('filter-form').submit();
+    });
+    });
+</script>
+{% endblock %}

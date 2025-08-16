@@ -4,7 +4,6 @@ Models for property listings in DreamDwelling.
 
 from django.db import models
 from django.contrib.gis.db import models as gis_models
-from django.contrib.postgres.fields import ArrayField
 from users.models import User
 
 
@@ -125,6 +124,28 @@ class Property(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.address_line1}, {self.city}"
+
+    def save(self, *args, **kwargs):
+        """Override save to sync location fields."""
+        from django.contrib.gis.geos import Point
+
+        # Sync PointField with lat/lng fields
+        if self.latitude is not None and self.longitude is not None:
+            self.location = Point(self.longitude, self.latitude)
+        elif self.location:
+            # If location is set but lat/lng are not, extract them
+            self.longitude = self.location.x
+            self.latitude = self.location.y
+
+        super().save(*args, **kwargs)
+
+    def get_full_address(self):
+        """Return the full formatted address."""
+        address_parts = [self.address_line1]
+        if self.address_line2:
+            address_parts.append(self.address_line2)
+        address_parts.extend([self.city, self.state, self.zip_code])
+        return ", ".join(address_parts)
 
 
 class PropertyImage(models.Model):

@@ -2,13 +2,7 @@
 Admin configuration for properties app.
 """
 
-import json
 from django.contrib import admin
-from django.contrib.gis.admin import GISModelAdmin
-from django.urls import path
-from django.shortcuts import render
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Q
 from .models import (
     PropertyType,
     Feature,
@@ -71,25 +65,8 @@ class OpenHouseInline(admin.TabularInline):
 
 
 @admin.register(Property)
-class PropertyAdmin(GISModelAdmin):
-    """Admin configuration for Property model with GIS support."""
-
-    # GIS Configuration
-    gis_widget_kwargs = {
-        "attrs": {
-            "map_width": 800,
-            "map_height": 600,
-        }
-    }
-    default_lon = -98.5795  # Center of USA
-    default_lat = 39.8283
-    default_zoom = 4
-    map_template = "gis/admin/openlayers.html"
-
-    change_form_template = "admin/properties/property/change_form.html"  # Custom template for property edit page
-
-    # Add map view action
-    actions = ["view_on_map"]
+class PropertyAdmin(admin.ModelAdmin):
+    """Admin configuration for Property model."""
 
     list_display = [
         "title",
@@ -108,7 +85,7 @@ class PropertyAdmin(GISModelAdmin):
         "state",
         "has_air_conditioning",
         "has_heating",
-        "pets_allowed",
+        "has_garage",
         "created_at",
     ]
     search_fields = [
@@ -169,19 +146,12 @@ class PropertyAdmin(GISModelAdmin):
                 "fields": (
                     "has_air_conditioning",
                     "has_heating",
-                    "pets_allowed",
-                    "furnished",
+                    "has_garage",
                     "features",
                 )
             },
         ),
-        (
-            "Media",
-            {
-                "fields": ("virtual_tour_url",),
-                "description": "Images are managed through the Images inline section below.",
-            },
-        ),
+        ("Media", {"fields": ("primary_image", "virtual_tour_url")}),
         (
             "Metadata",
             {
@@ -204,108 +174,6 @@ class PropertyAdmin(GISModelAdmin):
         PropertyReviewInline,
         OpenHouseInline,
     ]
-
-    def get_urls(self):
-        """Add custom URLs for the property admin."""
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "map-view/",
-                self.admin_site.admin_view(self.map_view),
-                name="property_map_view",
-            ),
-        ]
-        return custom_urls + urls
-
-    def map_view(self, request, selected_ids=None):
-        """Custom view that shows properties on a map."""
-        # Get filter parameters
-        status = request.GET.get("status", "")
-        listing_type = request.GET.get("listing_type", "")
-        min_price = request.GET.get("min_price", "")
-        max_price = request.GET.get("max_price", "")
-        min_bedrooms = request.GET.get("min_bedrooms", "")
-        min_bathrooms = request.GET.get("min_bathrooms", "")
-        city = request.GET.get("city", "")
-        state = request.GET.get("state", "")
-
-        # Build query filters
-        filters = Q()
-        if status:
-            filters &= Q(status=status)
-        if listing_type:
-            filters &= Q(listing_type=listing_type)
-        if min_price:
-            filters &= Q(price__gte=min_price)
-        if max_price:
-            filters &= Q(price__lte=max_price)
-        if min_bedrooms:
-            filters &= Q(bedrooms__gte=min_bedrooms)
-        if min_bathrooms:
-            filters &= Q(bathrooms__gte=min_bathrooms)
-        if city:
-            filters &= Q(city__icontains=city)
-        if state:
-            filters &= Q(state__icontains=state)
-
-        # Get properties with coordinates
-        if selected_ids:
-            properties = Property.objects.filter(id__in=selected_ids)
-        else:
-            properties = Property.objects.filter(filters)
-
-        # Prepare data for JSON
-        property_data = []
-        for prop in properties:
-            if prop.latitude and prop.longitude:
-                property_data.append(
-                    {
-                        "id": prop.id,
-                        "title": prop.title,
-                        "address_line1": prop.address_line1,
-                        "city": prop.city,
-                        "state": prop.state,
-                        "latitude": float(prop.latitude),
-                        "longitude": float(prop.longitude),
-                        "price": float(prop.price),
-                        "bedrooms": prop.bedrooms,
-                        "bathrooms": float(prop.bathrooms),
-                        "square_feet": prop.square_feet,
-                        "status": prop.status,
-                        "listing_type": prop.listing_type,
-                    }
-                )
-
-        # Convert to JSON
-        properties_json = json.dumps(property_data, cls=DjangoJSONEncoder)
-
-        context = {
-            "title": "Property Map View",
-            "properties": properties,
-            "properties_json": properties_json,
-            # Include original filter parameters to maintain state
-            "filters": {
-                "status": status,
-                "listing_type": listing_type,
-                "min_price": min_price,
-                "max_price": max_price,
-                "min_bedrooms": min_bedrooms,
-                "min_bathrooms": min_bathrooms,
-                "city": city,
-                "state": state,
-            },
-            # Include media
-            "media": self.media,
-        }
-
-        return render(request, "admin/properties/property/map_view.html", context)
-
-    def view_on_map(self, request, queryset):
-        """Admin action to view selected properties on map."""
-        selected = request.POST.getlist("_selected_action")
-        return self.map_view(request, selected_ids=selected)
-
-    view_on_map.short_description = "View selected properties on map"
 
     def save_model(self, request, obj, form, change):
         """Custom save to handle location field synchronization."""

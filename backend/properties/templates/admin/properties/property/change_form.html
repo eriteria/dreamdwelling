@@ -1,0 +1,53 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .olMap {
+        width: 100% !important;
+        height: 600px !important;
+    }
+
+    .gis-map-container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+<script>
+    django.jQuery(document).ready(function () {
+        // Set timeout to ensure map is loaded
+        setTimeout(function () {
+            try {
+                if (typeof olMap !== 'undefined') {
+                    // Add OpenStreetMap as base layer
+                    var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+                    olMap.addLayer(osm);
+                    osm.setZIndex(0);
+
+                    // Move OSM to bottom
+                    olMap.setLayerIndex(osm, 0);
+
+                    // Add property styling
+                    var style = new OpenLayers.Style({
+                        pointRadius: 10,
+                        fillColor: "#E74C3C",
+                        fillOpacity: 0.6,
+                        strokeColor: "#C0392B",
+                        strokeWidth: 2,
+                        strokeOpacity: 1
+                    });
+
+                    // Apply style to vector layer
+                    var vectorLayers = olMap.getLayersByClass("OpenLayers.Layer.Vector");
+                    if (vectorLayers.length > 0) {
+                        vectorLayers[0].styleMap = new OpenLayers.StyleMap(style);
+                        vectorLayers[0].redraw();
+                    }
+                }
+            } catch (e) {
+                console.error("Error setting up map:", e);
+            }
+        }, 500);
+    });
+</script>
+{% endblock %}
