@@ -1,0 +1,217 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static humanize %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #map {
+        width: 100%;
+        height: 600px;
+        margin-top: 20px;
+    }
+
+    .property-list {
+        height: 600px;
+        overflow-y: auto;
+        margin-top: 20px;
+    }
+
+    .property-item {
+        padding: 10px;
+        border-bottom: 1px solid #e5e5e5;
+        cursor: pointer;
+    }
+
+    .property-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .property-item.active {
+        background-color: #e8f0fe;
+        border-left: 3px solid #1a73e8;
+    }
+
+    .filter-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #e5e5e5;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+    }
+
+    .filter-title {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .filter-field {
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+
+    .filter-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .filter-actions {
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="module">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="property-list" class="property-list"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+<script>
+    // Property data from backend
+    const properties = {{ properties_json| safe }};
+
+    // Initialize map when page loads
+    window.onload = function () {
+        initMap();
+    };
+
+    function initMap() {
+        // Center on US (can be adjusted based on property locations)
+        const mapCenter = { lat: 39.8283, lng: -98.5795 };
+
+        // Create map
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 4,
+            center: mapCenter
+        });
+
+        // Info window for markers
+        const infoWindow = new google.maps.InfoWindow();
+
+        // Bounds to contain all markers
+        const bounds = new google.maps.LatLngBounds();
+
+        // Add markers for each property
+        const markers = {};
+        properties.forEach(function (property) {
+            const position = { lat: property.lat, lng: property.lng };
+
+            // Create marker
+            const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: property.title
+            });
+
+            // Store marker reference
+            markers[property.id] = marker;
+
+            // Add click listener to marker
+            marker.addListener('click', function () {
+                const content = `
+                    <div>
+                        <h4>${property.title}</h4>
+                        <p>${property.address}</p>
+                        <p><strong>$${property.price.toLocaleString()}</strong></p>
+                        <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+                        <p>Status: ${property.status}</p>
+                        <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
+                    </div>
+                `;
+
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+
+                // Highlight corresponding property in list
+                highlightProperty(property.id);
+            });
+
+            // Extend bounds to include this marker
+            bounds.extend(position);
+        });
+
+        // Fit map to bounds if we have properties
+        if (properties.length > 0) {
+            map.fitBounds(bounds);
+        }
+
+        // Populate property list
+        const propertyList = document.getElementById('property-list');
+        properties.forEach(function (property) {
+            const propertyItem = document.createElement('div');
+            propertyItem.className = 'property-item';
+            propertyItem.id = `property-${property.id}`;
+            propertyItem.innerHTML = `
+                <h4>${property.title}</h4>
+                <p>${property.address}</p>
+                <p><strong>$${property.price.toLocaleString()}</strong></p>
+                <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+            `;
+
+            // Add click listener to list item
+            propertyItem.addEventListener('click', function () {
+                // Open info window for this property
+                const marker = markers[property.id];
+                const content = `
+                    <div>
+                        <h4>${property.title}</h4>
+                        <p>${property.address}</p>
+                        <p><strong>$${property.price.toLocaleString()}</strong></p>
+                        <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+                        <p>Status: ${property.status}</p>
+                        <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
+                    </div>
+                `;
+
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+
+                // Pan to this marker
+                map.panTo(marker.getPosition());
+
+                // Highlight this property in list
+                highlightProperty(property.id);
+            });
+
+            propertyList.appendChild(propertyItem);
+        });
+    }
+
+    function highlightProperty(propertyId) {
+        // Remove active class from all property items
+        document.querySelectorAll('.property-item').forEach(function (item) {
+            item.classList.remove('active');
+        });
+
+        // Add active class to selected property
+        const selectedProperty = document.getElementById(`property-${propertyId}`);
+        if (selectedProperty) {
+            selectedProperty.classList.add('active');
+            selectedProperty.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+</script>
+{% endblock %}

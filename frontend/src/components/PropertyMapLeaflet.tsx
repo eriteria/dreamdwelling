@@ -5,6 +5,8 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import Image from "next/image";
+import { createRoot, Root } from "react-dom/client";
 
 interface Property {
   id: number;
@@ -31,6 +33,86 @@ interface PropertyMapProps {
   selectedPropertyId?: number;
 }
 
+export function PopupCard({ property }: { property: Property }) {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+
+  return (
+    <div style={{ minWidth: 250 }}>
+      {property.primary_image && (
+        <Image
+          src={property.primary_image}
+          alt={property.title}
+          width={320}
+          height={120}
+          style={{
+            width: "100%",
+            height: 120,
+            objectFit: "cover",
+            borderRadius: 6,
+            marginBottom: 8,
+          }}
+        />
+      )}
+      <h3 style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>
+        {property.title}
+      </h3>
+      <p
+        style={{
+          fontSize: 20,
+          fontWeight: 700,
+          color: "#2563eb",
+          marginBottom: 8,
+        }}
+      >
+        {formatPrice(property.price)}
+        {property.listing_type === "rent" ? "/month" : ""}
+      </p>
+      <div style={{ fontSize: 14, color: "#6b7280", marginBottom: 8 }}>
+        <p>
+          {property.bedrooms} bed • {property.bathrooms} bath •{" "}
+          {property.square_feet.toLocaleString()} sq ft
+        </p>
+        <p style={{ textTransform: "capitalize" }}>{property.property_type}</p>
+      </div>
+      <p style={{ fontSize: 14, color: "#9ca3af" }}>{property.address}</p>
+      <div style={{ marginTop: 8 }}>
+        <span
+          style={{
+            padding: "4px 8px",
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 500,
+            backgroundColor:
+              property.status === "available"
+                ? "#dcfce7"
+                : property.status === "pending"
+                ? "#fef3c7"
+                : "#fee2e2",
+            color:
+              property.status === "available"
+                ? "#166534"
+                : property.status === "pending"
+                ? "#92400e"
+                : "#991b1b",
+          }}
+        >
+          {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+        </span>
+      </div>
+      <div style={{ marginTop: 4, fontSize: 12, color: "#9ca3af" }}>
+        Coordinates: {property.latitude.toFixed(6)},{" "}
+        {property.longitude.toFixed(6)}
+      </div>
+    </div>
+  );
+}
+
 export default function PropertyMapLeaflet({
   properties,
   center = [39.8283, -98.5795], // Center of USA
@@ -42,9 +124,12 @@ export default function PropertyMapLeaflet({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const popupRootsRef = useRef<Root[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  // (popup is defined at module scope)
 
   // Initialize map function - moved outside useEffect to avoid timing issues
   const initializeMap = useCallback(() => {
@@ -232,7 +317,7 @@ export default function PropertyMapLeaflet({
     }
   });
 
-  const updateMarkers = () => {
+  const updateMarkers = useCallback(() => {
     console.log("updateMarkers called with properties:", properties.length);
 
     if (!mapInstanceRef.current || !isLoaded) {
@@ -251,11 +336,17 @@ export default function PropertyMapLeaflet({
 
     console.log("Starting marker update process...");
 
-    // Clear existing markers
+    // Clear existing markers and unmount popup roots
     markersRef.current.forEach((marker) => {
       mapInstanceRef.current.removeLayer(marker);
     });
     markersRef.current = [];
+    popupRootsRef.current.forEach((root) => {
+      try {
+        root.unmount();
+      } catch {}
+    });
+    popupRootsRef.current = [];
 
     // Add new markers
     if (properties.length > 0) {
@@ -299,65 +390,11 @@ export default function PropertyMapLeaflet({
         validProperties.forEach((property) => {
           const marker = L.marker([property.latitude, property.longitude]);
 
-          // Create popup content
-          const formatPrice = (price: number) => {
-            return new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            }).format(price);
-          };
-
-          const popupContent = `
-            <div style="min-width: 250px;">
-              ${
-                property.primary_image
-                  ? `<img src="${property.primary_image}" alt="${property.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" />`
-                  : ""
-              }
-              <h3 style="font-weight: 600; font-size: 18px; margin-bottom: 4px;">${
-                property.title
-              }</h3>
-              <p style="font-size: 20px; font-weight: 700; color: #2563eb; margin-bottom: 8px;">
-                ${formatPrice(property.price)}${
-            property.listing_type === "rent" ? "/month" : ""
-          }
-              </p>
-              <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
-                <p>${property.bedrooms} bed • ${
-            property.bathrooms
-          } bath • ${property.square_feet.toLocaleString()} sq ft</p>
-                <p style="text-transform: capitalize;">${
-                  property.property_type
-                }</p>
-              </div>
-              <p style="font-size: 14px; color: #9ca3af;">${
-                property.address
-              }</p>
-              <div style="margin-top: 8px;">
-                <span style="padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; ${
-                  property.status === "available"
-                    ? "background-color: #dcfce7; color: #166534;"
-                    : property.status === "pending"
-                    ? "background-color: #fef3c7; color: #92400e;"
-                    : "background-color: #fee2e2; color: #991b1b;"
-                }">
-                  ${
-                    property.status.charAt(0).toUpperCase() +
-                    property.status.slice(1)
-                  }
-                </span>
-              </div>
-              <div style="margin-top: 4px; font-size: 12px; color: #9ca3af;">
-                Coordinates: ${property.latitude.toFixed(
-                  6
-                )}, ${property.longitude.toFixed(6)}
-              </div>
-            </div>
-          `;
-
-          marker.bindPopup(popupContent);
+          // Create React popup content
+          const container = document.createElement("div");
+          const root = createRoot(container);
+          root.render(<PopupCard property={property} />);
+          marker.bindPopup(container);
 
           // Add click handler
           marker.on("click", () => {
@@ -366,8 +403,16 @@ export default function PropertyMapLeaflet({
             }
           });
 
+          // Unmount React root when popup closes
+          marker.on("popupclose", () => {
+            try {
+              root.unmount();
+            } catch {}
+          });
+
           marker.addTo(mapInstanceRef.current);
           markersRef.current.push(marker);
+          popupRootsRef.current.push(root);
         });
 
         // Fit bounds to show all properties
@@ -400,7 +445,7 @@ export default function PropertyMapLeaflet({
     }
 
     console.log("updateMarkers completed");
-  };
+  }, [center, isLoaded, onPropertyClick, properties]);
 
   useEffect(() => {
     console.log(
@@ -412,7 +457,7 @@ export default function PropertyMapLeaflet({
     if (isLoaded && mapInstanceRef.current) {
       updateMarkers();
     }
-  }, [properties, isLoaded]);
+  }, [isLoaded, updateMarkers, properties.length]);
 
   if (error) {
     return (

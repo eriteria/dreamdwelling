@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    #map {
+        width: 100%;
+        height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Map Test Page</h1>
+    <div id="map"></div>
+    <div id="debug"></div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            document.getElementById('debug').innerHTML += "<p>DOM content loaded</p>";
+
+            // Initialize map
+            var map = L.map('map').setView([39.8283, -98.5795], 4);
+            document.getElementById('debug').innerHTML += "<p>Map initialized</p>";
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            document.getElementById('debug').innerHTML += "<p>Tile layer added</p>";
+
+            // Add a test marker
+            L.marker([39.8283, -98.5795])
+                .addTo(map)
+                .bindPopup("Test Marker")
+                .openPopup();
+            document.getElementById('debug').innerHTML += "<p>Test marker added</p>";
+
+        } catch (e) {
+            document.getElementById('debug').innerHTML += "<p>Error: " + e.message + "</p>";
+            console.error("Map error:", e);
+        }
+    });
+</script>
+{% endblock %}

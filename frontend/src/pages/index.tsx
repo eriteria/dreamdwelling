@@ -286,7 +286,7 @@ export default function HomePage() {
             Your dream home awaits
           </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto font-light">
-            Join thousands who've found their perfect property through
+            Join thousands who&apos;ve found their perfect property through
             DreamDwelling
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">

@@ -1,0 +1,363 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static humanize %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #map {
+        width: 100%;
+        height: 700px;
+        margin-top: 20px;
+    }
+
+    .property-list {
+        height: 600px;
+        overflow-y: auto;
+        margin-top: 20px;
+    }
+
+    .property-item {
+        padding: 10px;
+        border-bottom: 1px solid #e5e5e5;
+        cursor: pointer;
+    }
+
+    .property-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .property-item.active {
+        background-color: #e8f0fe;
+        border-left: 3px solid #1a73e8;
+    }
+
+    .filter-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #e5e5e5;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+    }
+
+    .filter-title {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .filter-field {
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+
+    .filter-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .filter-actions {
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="module">
+    <div class="filter-section">
+        <h3 class="filter-title">Filter Properties</h3>
+        <form method="get" id="filter-form">
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label for="status">Status:</label>
+                    <select name="status" id="status">
+                        <option value="">All</option>
+                        <option value="Available" {% if filters.status=='Available' %}selected{% endif %}>Available
+                        </option>
+                        <option value="Pending" {% if filters.status=='Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Sold" {% if filters.status=='Sold' %}selected{% endif %}>Sold</option>
+                        <option value="Off Market" {% if filters.status=='Off Market' %}selected{% endif %}>Off Market
+                        </option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="listing_type">Listing Type:</label>
+                    <select name="listing_type" id="listing_type">
+                        <option value="">All</option>
+                        <option value="For Sale" {% if filters.listing_type=='For Sale' %}selected{% endif %}>For Sale
+                        </option>
+                        <option value="For Rent" {% if filters.listing_type=='For Rent' %}selected{% endif %}>For Rent
+                        </option>
+                        <option value="Both" {% if filters.listing_type=='Both' %}selected{% endif %}>Both</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="min_price">Min Price:</label>
+                    <input type="number" name="min_price" id="min_price" value="{{ filters.min_price }}">
+                </div>
+                <div class="filter-field">
+                    <label for="max_price">Max Price:</label>
+                    <input type="number" name="max_price" id="max_price" value="{{ filters.max_price }}">
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-field">
+                    <label for="min_bedrooms">Min Bedrooms:</label>
+                    <input type="number" name="min_bedrooms" id="min_bedrooms" value="{{ filters.min_bedrooms }}">
+                </div>
+                <div class="filter-field">
+                    <label for="min_bathrooms">Min Bathrooms:</label>
+                    <input type="number" name="min_bathrooms" id="min_bathrooms" value="{{ filters.min_bathrooms }}">
+                </div>
+                <div class="filter-field">
+                    <label for="city">City:</label>
+                    <input type="text" name="city" id="city" value="{{ filters.city }}">
+                </div>
+                <div class="filter-field">
+                    <label for="state">State:</label>
+                    <input type="text" name="state" id="state" value="{{ filters.state }}">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button default">Apply Filters</button>
+                <button type="button" class="button" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div id="map"></div>
+        </div>
+        <div class="col-md-4">
+            <div id="property-list" class="property-list"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default:'' }}"></script>
+<!-- Add MarkerClusterer library -->
+<script src="https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js"></script>
+<script>
+    // Map styles
+    const mapStyles = {{ map_style|default: '[]' | safe }};
+
+    // Initialize the map when the page loads
+    window.onload = function () {
+        console.log('Window loaded, initializing map');
+        try {
+            initMap();
+            console.log('Map initialized successfully');
+        } catch (e) {
+            console.error('Error initializing map:', e);
+            // Display error on the page
+            const mapDiv = document.getElementById('map');
+            if (mapDiv) {
+                mapDiv.innerHTML = `<div style="padding: 20px; text-align: center; background-color: #ffeeee; color: #cc0000;">
+                    <h3>Error Loading Map</h3>
+                    <p>${e.message}</p>
+                    <p>Check the browser console for more details.</p>
+                </div>`;
+            }
+        }
+    };
+
+    function initMap() {
+        // Create a map centered on the US
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 39.8283, lng: -98.5795 },
+            zoom: 4,
+            maxZoom: 18,
+            styles: mapStyles
+        });
+
+        const infoWindow = new google.maps.InfoWindow();
+        const markers = [];
+        const markersById = {};
+        const bounds = new google.maps.LatLngBounds();
+        const properties = {{ properties_json| safe
+    }};
+
+    // Add markers for each property
+    properties.forEach(function (property) {
+        if (property.latitude && property.longitude) {
+            const position = {
+                lat: parseFloat(property.latitude),
+                lng: parseFloat(property.longitude)
+            };
+
+            const marker = new google.maps.Marker({
+                position: position,
+                title: property.title
+            });
+
+            marker.addListener("click", () => {
+                const content = `
+                        <div>
+                            <h3>${property.title}</h3>
+                            <p>${property.address_line1}, ${property.city}, ${property.state}</p>
+                            <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+                            <p><strong>$${property.price.toLocaleString()}</strong></p>
+                            <p>Status: ${property.status}</p>
+                            <p>Listing Type: ${property.listing_type}</p>
+                            <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
+                        </div>
+                    `;
+
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+
+                // Highlight property in list
+                highlightProperty(property.id);
+            });
+
+            markers.push(marker);
+            markersById[property.id] = marker;
+            bounds.extend(position);
+        }
+    });
+
+    // Create a marker clusterer to manage the markers
+    const markerCluster = new markerClusterer.MarkerClusterer({
+        map,
+        markers,
+        algorithm: new markerClusterer.SuperClusterAlgorithm({
+            radius: 100, // Clustering radius in pixels
+            maxZoom: 15  // Max zoom level for clustering
+        }),
+        renderer: {
+            render: ({ count, position }) => {
+                // Color clusters based on the number of properties they contain
+                let fillColor = "#4285F4"; // Blue for small clusters
+
+                if (count > 10) {
+                    fillColor = "#FBBC05"; // Yellow for medium clusters
+                }
+
+                if (count > 25) {
+                    fillColor = "#EA4335"; // Red for large clusters
+                }
+
+                return new google.maps.Marker({
+                    position,
+                    label: { text: String(count), color: "white" },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: fillColor,
+                        fillOpacity: 0.8,
+                        strokeColor: "#ffffff",
+                        strokeWeight: 2,
+                        scale: Math.log10(count) * 10 + 15, // Size based on count
+                    },
+                    zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+                });
+            },
+        },
+        onClusterClick: (event, cluster, map) => {
+            const markers = cluster.markers;
+            const clusterBounds = new google.maps.LatLngBounds();
+            markers.forEach(marker => clusterBounds.extend(marker.getPosition()));
+
+            // Zoom the map to fit just the clicked cluster
+            map.fitBounds(clusterBounds);
+
+            // Optional: If there are just a few markers, zoom in more
+            if (markers.length < 10) {
+                map.setZoom(Math.min(map.getZoom() + 2, 18));
+            }
+        }
+    });
+
+    // Fit the map to the bounds of all markers if we have any
+    if (markers.length > 0) {
+        map.fitBounds(bounds);
+    }
+
+    // Populate property list
+    const propertyList = document.getElementById("property-list");
+    properties.forEach(function (property) {
+        if (property.latitude && property.longitude) {
+            const propertyItem = document.createElement("div");
+            propertyItem.className = "property-item";
+            propertyItem.id = `property-${property.id}`;
+            propertyItem.innerHTML = `
+                    <h4>${property.title}</h4>
+                    <p>${property.address_line1}, ${property.city}, ${property.state}</p>
+                    <p><strong>$${property.price.toLocaleString()}</strong></p>
+                    <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+                    <p>Status: ${property.status}</p>
+                `;
+
+            propertyItem.addEventListener("click", function () {
+                const marker = markersById[property.id];
+
+                // Open info window
+                const content = `
+                        <div>
+                            <h3>${property.title}</h3>
+                            <p>${property.address_line1}, ${property.city}, ${property.state}</p>
+                            <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
+                            <p><strong>$${property.price.toLocaleString()}</strong></p>
+                            <p>Status: ${property.status}</p>
+                            <p>Listing Type: ${property.listing_type}</p>
+                            <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
+                        </div>
+                    `;
+
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+
+                // Pan to marker
+                map.panTo(marker.getPosition());
+                map.setZoom(15);
+
+                // Highlight property in list
+                highlightProperty(property.id);
+            });
+
+            propertyList.appendChild(propertyItem);
+        }
+    });
+    }
+
+    function highlightProperty(propertyId) {
+        // Remove active class from all items
+        document.querySelectorAll(".property-item").forEach(function (item) {
+            item.classList.remove("active");
+        });
+
+        // Add active class to selected item
+        const selectedItem = document.getElementById(`property-${propertyId}`);
+        if (selectedItem) {
+            selectedItem.classList.add("active");
+            selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+    }
+
+    function clearFilters() {
+        // Reset all form fields
+        document.getElementById("status").value = "";
+        document.getElementById("listing_type").value = "";
+        document.getElementById("min_price").value = "";
+        document.getElementById("max_price").value = "";
+        document.getElementById("min_bedrooms").value = "";
+        document.getElementById("min_bathrooms").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("state").value = "";
+
+        // Submit the form
+        document.getElementById("filter-form").submit();
+    }
+</script>
+{% endblock %}

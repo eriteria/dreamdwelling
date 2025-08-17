@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import Image from "next/image";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -128,9 +129,11 @@ export default function PropertyMap({
             <Popup>
               <div className="min-w-[250px]">
                 {property.primary_image && (
-                  <img
+                  <Image
                     src={property.primary_image}
                     alt={property.title}
+                    width={320}
+                    height={128}
                     className="w-full h-32 object-cover rounded-lg mb-2"
                   />
                 )}

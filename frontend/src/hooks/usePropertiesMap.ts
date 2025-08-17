@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 interface Property {
@@ -30,40 +30,47 @@ export function usePropertiesMap({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMapData = async (customFilters?: Record<string, any>) => {
-    setLoading(true);
-    setError(null);
+  const filtersKey = JSON.stringify(filters);
 
-    try {
-      const params = new URLSearchParams();
-      const appliedFilters = { ...filters, ...customFilters };
+  // We intentionally depend on a stable stringified key to avoid reference churn
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchMapData = useCallback(
+    async (customFilters?: Record<string, any>) => {
+      setLoading(true);
+      setError(null);
 
-      // Add filters to params
-      Object.entries(appliedFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          params.append(key, value.toString());
-        }
-      });
+      try {
+        const params = new URLSearchParams();
+        const appliedFilters = { ...filters, ...customFilters };
 
-      const response = await axios.get(
-        `${
-          process.env.NEXT_PUBLIC_API_URL
-        }/properties/map_data/?${params.toString()}`
-      );
-      setProperties(response.data);
-    } catch (err) {
-      console.error("Error fetching map data:", err);
-      setError("Failed to load map data");
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Add filters to params
+        Object.entries(appliedFilters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            params.append(key, value.toString());
+          }
+        });
+
+        const response = await axios.get(
+          `${
+            process.env.NEXT_PUBLIC_API_URL
+          }/properties/map_data/?${params.toString()}`
+        );
+        setProperties(response.data);
+      } catch (err) {
+        console.error("Error fetching map data:", err);
+        setError("Failed to load map data");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filtersKey]
+  );
 
   useEffect(() => {
     if (autoFetch) {
       fetchMapData();
     }
-  }, [autoFetch]);
+  }, [autoFetch, fetchMapData]);
 
   return {
     properties,

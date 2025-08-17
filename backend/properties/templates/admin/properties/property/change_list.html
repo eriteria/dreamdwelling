@@ -3,8 +3,14 @@
 
 {% block object-tools-items %}
 <li>
-    <a href="{% url 'admin:properties_property_property_map_view' %}" class="viewlink">
+    <a href="{% url 'admin:property_map_view' %}" class="viewlink">
         {% trans 'Map View' %}
+    </a>
+</li>
+<li>
+    <a href="{% url 'admin:property_map_diagnostics' %}" class="viewlink"
+        style="background-color: #ff8c00; color: white;">
+        {% trans 'Map Diagnostics' %}
     </a>
 </li>
 {{ block.super }}

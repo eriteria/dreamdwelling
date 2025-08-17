@@ -1,0 +1,161 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ form.media }}
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <h1>{% trans 'Property Map View' %}</h1>
+
+    <p>This view uses Django's built-in OpenLayers integration for GeoDjango.</p>
+
+    <div style="margin: 20px 0;">
+        <div id="property-map" style="width: 100%; height: 600px; border: 1px solid #ddd;"></div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <h2>{% trans 'Properties List' %}</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Title</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Address</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Details</th>
+                    <th style="padding: 8px; border-bottom: 1px solid #ddd; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for property in properties %}
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ property.title }}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ property.address_line1 }}, {{
+                        property.city }}, {{ property.state }}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                        {{ property.bedrooms }} bd | {{ property.bathrooms }} ba | {{ property.square_feet }} sqft<br>
+                        <strong>${{ property.price|floatformat:0|intcomma }}</strong>
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                        <a href="{% url 'admin:properties_property_change' property.id %}" class="button">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'openlayers/OpenLayers.js' %}"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var map, vectorLayer, selectControl;
+        var properties = {{ properties_json| safe
+    }};
+
+    // Initialize OpenLayers map
+    function init() {
+        map = new OpenLayers.Map('property-map');
+
+        // Add base layer
+        var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+        map.addLayer(osm);
+
+        // Vector layer for properties
+        vectorLayer = new OpenLayers.Layer.Vector("Properties");
+        map.addLayer(vectorLayer);
+
+        // Add property markers
+        addProperties();
+
+        // Add controls
+        selectControl = new OpenLayers.Control.SelectFeature(
+            vectorLayer,
+            { onSelect: onFeatureSelect, onUnselect: onFeatureUnselect }
+        );
+        map.addControl(selectControl);
+        selectControl.activate();
+
+        // Set map center and zoom
+        if (vectorLayer.features.length > 0) {
+            map.zoomToExtent(vectorLayer.getDataExtent());
+        } else {
+            // Default center on US if no properties
+            map.setCenter(
+                new OpenLayers.LonLat(-98.5795, 39.8283).transform(
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+                ),
+                4
+            );
+        }
+    }
+
+    // Add property features to the map
+    function addProperties() {
+        for (var i = 0; i < properties.length; i++) {
+            var property = properties[i];
+
+            if (property.latitude && property.longitude) {
+                // Create point feature
+                var point = new OpenLayers.Geometry.Point(property.longitude, property.latitude)
+                    .transform(
+                        new OpenLayers.Projection("EPSG:4326"),
+                        map.getProjectionObject()
+                    );
+
+                var feature = new OpenLayers.Feature.Vector(point, {
+                    id: property.id,
+                    title: property.title,
+                    address: property.address_line1 + ', ' + property.city + ', ' + property.state,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    sqft: property.square_feet,
+                    price: property.price
+                });
+
+                vectorLayer.addFeatures([feature]);
+            }
+        }
+    }
+
+    // Feature select handler
+    function onFeatureSelect(feature) {
+        var content = '<div style="padding: 10px;">' +
+            '<h3>' + feature.attributes.title + '</h3>' +
+            '<p>' + feature.attributes.address + '</p>' +
+            '<p>' + feature.attributes.bedrooms + ' bd | ' +
+            feature.attributes.bathrooms + ' ba | ' +
+            feature.attributes.sqft + ' sqft</p>' +
+            '<p><strong>$' + feature.attributes.price.toLocaleString() + '</strong></p>' +
+            '<p><a href="/admin/properties/property/' + feature.attributes.id + '/change/">Edit Property</a></p>' +
+            '</div>';
+
+        var popup = new OpenLayers.Popup.FramedCloud(
+            "popup",
+            feature.geometry.getBounds().getCenterLonLat(),
+            null,
+            content,
+            null,
+            true
+        );
+        feature.popup = popup;
+        map.addPopup(popup);
+    }
+
+    // Feature unselect handler
+    function onFeatureUnselect(feature) {
+        map.removePopup(feature.popup);
+        feature.popup.destroy();
+        feature.popup = null;
+    }
+
+    // Initialize map
+    init();
+    });
+</script>
+{% endblock %}

@@ -3,7 +3,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css?v=20250816" />
 <style>
     .container {
         width: 100%;
@@ -155,7 +155,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div id="content" class="flex">
     <h1>{% trans 'Property Map View' %}</h1>
 
     <div class="filters">
@@ -225,7 +225,7 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div id="map"></div>
+            <div id="map" style="width: 100%; height: 700px; border: 1px solid #ddd;"></div>
         </div>
         <div class="col-md-4">
             <h2>{% trans 'Properties' %}</h2>
@@ -256,91 +256,166 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js?v=20250816"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Leaflet map
-        var map = L.map('map').setView([39.8283, -98.5795], 4);
-        var hasValidProperties = false;
+    // Debugging helper function
+    function debug(message) {
+        console.log(message);
+        // Optionally add visual debug info to the page
+        // var debugDiv = document.getElementById('debug-info');
+        // if (debugDiv) debugDiv.innerHTML += '<p>' + message + '</p>';
+    }
 
-        // Add OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+    debug("Map view script loading...");
 
-        var markers = {};
-        var properties = {{ properties_json| safe
-    }};
+    // Wait a bit to ensure DOM is ready
+    setTimeout(function () {
+        try {
+            debug("Initializing map...");
 
-    // Add property markers
-    properties.forEach(function (property) {
-        if (property.latitude && property.longitude) {
-            hasValidProperties = true;
-            var marker = L.marker([property.latitude, property.longitude])
-                .addTo(map)
-                .bindPopup(
-                    '<strong>' + property.title + '</strong><br>' +
-                    property.address_line1 + ', ' + property.city + ', ' + property.state + '<br>' +
-                    property.bedrooms + ' bd | ' + property.bathrooms + ' ba | ' + property.square_feet + ' sqft<br>' +
-                    '<strong>$' + property.price.toLocaleString() + '</strong><br>' +
-                    '<a href="/admin/properties/property/' + property.id + '/change/" target="_blank">Edit Property</a>'
-                );
+            // Make sure the map container exists
+            var mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.error("Map container not found!");
+                return;
+            }
+            debug("Map container found with dimensions: " + mapContainer.clientWidth + "x" + mapContainer.clientHeight);
 
-            marker.propertyId = property.id;
-            markers[property.id] = marker;
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error("Leaflet library not loaded!");
+                mapContainer.innerHTML = '<div style="padding: 20px; background-color: #ffeeee; color: #cc0000; text-align: center;"><h3>Error: Leaflet mapping library failed to load</h3><p>Please check your internet connection or try refreshing the page.</p></div>';
+                return;
+            }
+            debug("Leaflet library loaded: " + L.version);
 
-            marker.on('click', function () {
-                highlightProperty(property.id);
+            // Initialize Leaflet map
+            var map = L.map('map').setView([39.8283, -98.5795], 4);
+            debug("Map initialized");
+
+            var hasValidProperties = false;
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            debug("Tile layer added");
+
+            // Force map to recalculate size after it's displayed
+            setTimeout(function () {
+                map.invalidateSize();
+                debug("Map size recalculated");
+            }, 100);
+
+            var markers = {};
+            var properties = [];
+
+            try {
+                var propertiesJson = '{{ properties_json|escapejs }}';
+                properties = JSON.parse(propertiesJson);
+                debug("Properties JSON parsed successfully. Found " + properties.length + " properties");
+            } catch (e) {
+                console.error("Error parsing properties JSON:", e);
+                debug("Error parsing properties JSON: " + e.message);
+                properties = [];
+            }
+
+            // Add property markers
+            properties.forEach(function (property) {
+                try {
+                    if (property.latitude && property.longitude) {
+                        debug("Adding marker for property " + property.id + " at " + property.latitude + ", " + property.longitude);
+                        hasValidProperties = true;
+                        var marker = L.marker([property.latitude, property.longitude])
+                            .addTo(map)
+                            .bindPopup(
+                                '<strong>' + property.title + '</strong><br>' +
+                                property.address_line1 + ', ' + property.city + ', ' + property.state + '<br>' +
+                                property.bedrooms + ' bd | ' + property.bathrooms + ' ba | ' + property.square_feet + ' sqft<br>' +
+                                '<strong>$' + property.price.toLocaleString() + '</strong><br>' +
+                                '<a href="/admin/properties/property/' + property.id + '/change/" target="_blank">Edit Property</a>'
+                            );
+
+                        marker.propertyId = property.id;
+                        markers[property.id] = marker;
+
+                        marker.on('click', function () {
+                            highlightProperty(property.id);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Error adding marker for property ID " + property.id + ":", err);
+                    debug("Error adding marker for property " + property.id + ": " + err.message);
+                }
             });
-        }
-    });
 
-    // Check if we have any properties with valid coordinates
-    if (hasValidProperties) {
-        // Auto-fit map to show all markers
-        var bounds = [];
-        Object.values(markers).forEach(function (marker) {
-            bounds.push([marker._latlng.lat, marker._latlng.lng]);
-        });
+            // Check if we have any properties with valid coordinates
+            if (hasValidProperties) {
+                debug("Found valid properties, fitting bounds");
+                // Auto-fit map to show all markers
+                var bounds = [];
+                Object.values(markers).forEach(function (marker) {
+                    bounds.push([marker._latlng.lat, marker._latlng.lng]);
+                });
 
-        if (bounds.length > 0) {
-            map.fitBounds(bounds);
-        }
-    } else {
-        // No valid coordinates, show a message on the map
-        var noPropertiesMsg = L.DomUtil.create('div', 'no-properties-message');
-        noPropertiesMsg.innerHTML = '<p style="text-align: center; padding: 20px;">No properties with coordinates found. Add latitude/longitude to properties to see them on the map.</p>';
-        map.getContainer().appendChild(noPropertiesMsg);
-    }
-
-    // Property list click handler
-    document.querySelectorAll('.property-item').forEach(function (item) {
-        item.addEventListener('click', function () {
-            var propertyId = parseInt(this.dataset.id);
-            var marker = markers[propertyId];
-
-            if (marker) {
-                map.setView([marker._latlng.lat, marker._latlng.lng], 14);
-                marker.openPopup();
-                highlightProperty(propertyId);
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds);
+                    debug("Map bounds adjusted to show all properties");
+                }
+            } else {
+                debug("No valid properties found");
+                // No valid coordinates, show a message on the map
+                var noPropertiesMsg = L.DomUtil.create('div', 'no-properties-message');
+                noPropertiesMsg.innerHTML = '<p style="text-align: center; padding: 20px;">No properties with coordinates found. Add latitude/longitude to properties to see them on the map.</p>';
+                map.getContainer().appendChild(noPropertiesMsg);
             }
-        });
-    });    // Highlight selected property
-    function highlightProperty(propertyId) {
-        document.querySelectorAll('.property-item').forEach(function (item) {
-            item.classList.remove('active');
-            if (parseInt(item.dataset.id) === propertyId) {
-                item.classList.add('active');
-                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        });
-    }
 
-    // Clear filters button
-    document.getElementById('clear-filters').addEventListener('click', function () {
-        document.getElementById('filter-form').reset();
-        document.getElementById('filter-form').submit();
-    });
-    });
+            // Property list click handler
+            document.querySelectorAll('.property-item').forEach(function (item) {
+                item.addEventListener('click', function () {
+                    var propertyId = parseInt(this.dataset.id);
+                    var marker = markers[propertyId];
+
+                    if (marker) {
+                        map.setView([marker._latlng.lat, marker._latlng.lng], 14);
+                        marker.openPopup();
+                        highlightProperty(propertyId);
+                    }
+                });
+            });
+
+            // Highlight selected property
+            function highlightProperty(propertyId) {
+                document.querySelectorAll('.property-item').forEach(function (item) {
+                    item.classList.remove('active');
+                    if (parseInt(item.dataset.id) === propertyId) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                });
+            }
+
+            // Clear filters button
+            var clearFiltersBtn = document.getElementById('clear-filters');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function () {
+                    document.getElementById('filter-form').reset();
+                    document.getElementById('filter-form').submit();
+                });
+            }
+
+            debug("Map setup completed successfully");
+
+        } catch (err) {
+            console.error("Error in map initialization:", err);
+            var mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.innerHTML = '<div style="padding: 20px; background-color: #ffeeee; color: #cc0000; text-align: center;">' +
+                    '<h3>Error initializing map</h3>' +
+                    '<p>' + err.message + '</p>' +
+                    '</div>';
+            }
+        }
+    }, 500); // Small delay to ensure DOM is fully ready
 </script>
 {% endblock %}

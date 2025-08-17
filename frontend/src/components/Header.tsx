@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logout } from "@/features/auth/authSlice";
 import DarkModeToggle from "./DarkModeToggle";
@@ -153,10 +154,12 @@ export default function Header() {
                   >
                     <div className="relative">
                       {user?.profile_picture ? (
-                        <img
+                        <Image
                           src={user.profile_picture}
                           alt="Profile"
-                          className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                          width={32}
+                          height={32}
+                          className="rounded-full object-cover border-2 border-gray-200"
                         />
                       ) : (
                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
@@ -190,10 +193,12 @@ export default function Header() {
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-600">
                         <div className="flex items-center space-x-3">
                           {user?.profile_picture ? (
-                            <img
+                            <Image
                               src={user.profile_picture}
                               alt="Profile"
-                              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600"
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600"
                             />
                           ) : (
                             <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium ring-2 ring-blue-200 dark:ring-blue-400/30">
@@ -440,10 +445,12 @@ export default function Header() {
               <div className="px-2 space-y-1">
                 <div className="px-3 py-2 flex items-center space-x-3 border-b border-gray-100 mb-2 pb-3">
                   {user?.profile_picture ? (
-                    <img
+                    <Image
                       src={user.profile_picture}
                       alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css?v=20250816" />
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Leaflet Map Test</h1>
+    <div id="map"></div>
+    <div class="debug-info">
+        <h3>Debug Info</h3>
+        <div id="debug"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js?v=20250816"></script>
+    <script>
+        function log(message) {
+            console.log(message);
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += `<p>${message}</p>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                log('Initializing map...');
+
+                // Create map
+                const map = L.map('map').setView([39.8283, -98.5795], 4);
+                log('Map initialized');
+
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                log('Tile layer added');
+
+                // Add test markers
+                const cities = [
+                    { name: 'New York', lat: 40.7128, lng: -74.0060 },
+                    { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
+                    { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
+                    { name: 'Houston', lat: 29.7604, lng: -95.3698 },
+                    { name: 'Phoenix', lat: 33.4484, lng: -112.0740 }
+                ];
+
+                cities.forEach(city => {
+                    L.marker([city.lat, city.lng])
+                        .addTo(map)
+                        .bindPopup(`<b>${city.name}</b>`);
+                    log(`Added marker for ${city.name} at ${city.lat}, ${city.lng}`);
+                });
+
+                // Fit bounds
+                const bounds = cities.map(city => [city.lat, city.lng]);
+                map.fitBounds(bounds);
+                log('Map bounds adjusted');
+
+                log('Map setup complete');
+            } catch (e) {
+                log(`ERROR: ${e.message}`);
+                console.error(e);
+            }
+        });
+    </script>
+</body>
+
+</html>

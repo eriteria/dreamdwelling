@@ -59,7 +59,7 @@ export default function DashboardPage() {
               Welcome back, {user?.first_name}!
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2 transition-colors duration-300">
-              Here's an overview of your real estate activity.
+              Here&apos;s an overview of your real estate activity.
             </p>
           </div>
 
