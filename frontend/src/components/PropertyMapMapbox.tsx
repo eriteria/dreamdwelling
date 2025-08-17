@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import Map, { MapRef, Marker, Popup, NavigationControl } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { PopupCard } from "@/components/PropertyMapLeaflet";
+import { PopupCard } from "@/components/PopupCard";
 
 interface Property {
   id: number;

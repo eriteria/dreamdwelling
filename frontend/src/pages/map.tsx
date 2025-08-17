@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Layout from "@/components/Layout";
-import PropertyMapLeaflet from "@/components/PropertyMapLeaflet";
 import PropertyMapMapbox from "@/components/PropertyMapMapbox";
 import { usePropertiesMap } from "@/hooks/usePropertiesMap";
 
@@ -18,11 +17,6 @@ export default function MapPage() {
   });
 
   const { properties, loading, error } = usePropertiesMap({ filters });
-  const [engine, setEngine] = useState<"leaflet" | "mapbox">(() =>
-    typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-      ? "mapbox"
-      : "leaflet"
-  );
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters((prev) => ({
@@ -74,21 +68,7 @@ export default function MapPage() {
               Filters
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Map Engine
-                </label>
-                <select
-                  value={engine}
-                  onChange={(e) =>
-                    setEngine(e.target.value as "leaflet" | "mapbox")
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-300"
-                >
-                  <option value="leaflet">Leaflet (OSM)</option>
-                  <option value="mapbox">Mapbox</option>
-                </select>
-              </div>
+              {/* Map engine selector removed; Mapbox is enforced */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Location
@@ -275,11 +255,7 @@ export default function MapPage() {
               </div>
             ) : (
               <div style={{ height: "600px" }}>
-                {engine === "mapbox" ? (
-                  <PropertyMapMapbox properties={properties} />
-                ) : (
-                  <PropertyMapLeaflet properties={properties} />
-                )}
+                <PropertyMapMapbox properties={properties} />
               </div>
             )}
           </div>

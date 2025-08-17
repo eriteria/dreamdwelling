@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { PopupCard } from "@/components/PropertyMapLeaflet";
+import { PopupCard } from "@/components/PopupCard";
 
 const property = {
   id: 1,
