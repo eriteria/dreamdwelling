@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import Map, { MapRef, Marker, Popup, NavigationControl } from "react-map-gl";
+import mapboxgl from "mapbox-gl"; // Needed for LngLatBounds type/ctor
 import "mapbox-gl/dist/mapbox-gl.css";
 import { PopupCard } from "@/components/PopupCard";
 
@@ -89,7 +90,7 @@ export default function PropertyMapMapbox({
       return;
     }
 
-    const bounds = new (mapboxgl as any).LngLatBounds();
+  const bounds = new mapboxgl.LngLatBounds();
     validProps.forEach((p) => bounds.extend([p.longitude, p.latitude]));
     map.fitBounds(bounds, { padding: 40, duration: 800 });
   }, [validProps, center, zoom]);
