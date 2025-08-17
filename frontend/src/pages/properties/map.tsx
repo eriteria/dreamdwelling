@@ -6,9 +6,9 @@ import SearchFilter from "@/components/SearchFilter";
 import { usePropertiesMap } from "@/hooks/usePropertiesMap";
 import { useRouter } from "next/router";
 
-// Dynamically import PropertyMapSimple to avoid SSR issues with Leaflet
-const PropertyMapSimple = dynamic(
-  () => import("@/components/PropertyMapSimple"),
+// Dynamically import Mapbox map to avoid SSR issues
+const PropertyMapMapbox = dynamic(
+  () => import("@/components/PropertyMapMapbox"),
   {
     ssr: false,
     loading: () => (
@@ -156,7 +156,7 @@ export default function PropertiesMapPage() {
                 </span>
               </div>
             ) : (
-              <PropertyMapSimple
+              <PropertyMapMapbox
                 properties={properties}
                 height="600px"
                 onPropertyClick={handlePropertyClick}

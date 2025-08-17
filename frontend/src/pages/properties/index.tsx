@@ -8,8 +8,10 @@ import SearchFilter from "@/components/SearchFilter";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { fetchProperties } from "@/features/properties/propertiesSlice";
 
-// Dynamically import PropertyMap to avoid SSR issues with Leaflet
-const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
+// Dynamically import Mapbox map to avoid SSR issues
+const PropertyMapMapbox = dynamic(
+  () => import("@/components/PropertyMapMapbox"),
+  {
   ssr: false,
   loading: () => (
     <div
@@ -22,7 +24,8 @@ const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
       </div>
     </div>
   ),
-});
+  }
+);
 
 // Transform property data for map component
 const transformPropertyForMap = (property: any) => ({
@@ -219,8 +222,9 @@ export default function PropertiesPage() {
               </div>
             ) : viewMode === "map" ? (
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <PropertyMap
+                <PropertyMapMapbox
                   properties={properties.map(transformPropertyForMap)}
+                  height="600px"
                 />
               </div>
             ) : (
