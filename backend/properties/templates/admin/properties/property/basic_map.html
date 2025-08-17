@@ -3,6 +3,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <style>
     #map {
         width: 100%;
@@ -88,77 +89,50 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
-    // Property data from backend
-    const properties = {{ properties_json| safe }};
-
-    // Initialize map when page loads
     window.onload = function () {
-        initMap();
-    };
-
-    function initMap() {
-        // Center on US (can be adjusted based on property locations)
-        const mapCenter = { lat: 39.8283, lng: -98.5795 };
-
-        // Create map
-        const map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 4,
-            center: mapCenter
+        if (!("{{ mapbox_access_token|default:'' }}")) {
+            document.getElementById('map').innerHTML = '<div style="padding: 20px; text-align: center; background-color: #fff3cd; color: #664d03;">Missing MAPBOX_ACCESS_TOKEN</div>';
+            return;
+        }
+        mapboxgl.accessToken = '{{ mapbox_access_token|default:"" }}';
+        const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: styleUrl,
+            center: [-98.5795, 39.8283],
+            zoom: 4
         });
 
-        // Info window for markers
-        const infoWindow = new google.maps.InfoWindow();
-
-        // Bounds to contain all markers
-        const bounds = new google.maps.LatLngBounds();
-
-        // Add markers for each property
+        const properties = JSON.parse('{{ properties_json|escapejs }}');
         const markers = {};
+        const bounds = new mapboxgl.LngLatBounds();
+
         properties.forEach(function (property) {
-            const position = { lat: property.lat, lng: property.lng };
-
-            // Create marker
-            const marker = new google.maps.Marker({
-                position: position,
-                map: map,
-                title: property.title
-            });
-
-            // Store marker reference
+            const lng = Number(property.lng);
+            const lat = Number(property.lat);
+            const marker = new mapboxgl.Marker()
+                .setLngLat([lng, lat])
+                .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML(
+                    '<div>' +
+                    '<h4>' + property.title + '</h4>' +
+                    '<p>' + property.address + '</p>' +
+                    '<p><strong>$' + Number(property.price).toLocaleString() + '</strong></p>' +
+                    '<p>' + property.bedrooms + ' bd | ' + property.bathrooms + ' ba | ' + property.square_feet + ' sqft</p>' +
+                    '<p>Status: ' + property.status + '</p>' +
+                    '<p><a href="/admin/properties/property/' + property.id + '/change/" target="_blank">Edit Property</a></p>' +
+                    '</div>'
+                ))
+                .addTo(map);
             markers[property.id] = marker;
-
-            // Add click listener to marker
-            marker.addListener('click', function () {
-                const content = `
-                    <div>
-                        <h4>${property.title}</h4>
-                        <p>${property.address}</p>
-                        <p><strong>$${property.price.toLocaleString()}</strong></p>
-                        <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
-                        <p>Status: ${property.status}</p>
-                        <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
-                    </div>
-                `;
-
-                infoWindow.setContent(content);
-                infoWindow.open(map, marker);
-
-                // Highlight corresponding property in list
-                highlightProperty(property.id);
-            });
-
-            // Extend bounds to include this marker
-            bounds.extend(position);
+            bounds.extend([lng, lat]);
         });
 
-        // Fit map to bounds if we have properties
         if (properties.length > 0) {
-            map.fitBounds(bounds);
+            map.fitBounds(bounds, { padding: 40, maxZoom: 14 });
         }
 
-        // Populate property list
         const propertyList = document.getElementById('property-list');
         properties.forEach(function (property) {
             const propertyItem = document.createElement('div');
@@ -167,46 +141,26 @@
             propertyItem.innerHTML = `
                 <h4>${property.title}</h4>
                 <p>${property.address}</p>
-                <p><strong>$${property.price.toLocaleString()}</strong></p>
+                <p><strong>$${Number(property.price).toLocaleString()}</strong></p>
                 <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
             `;
-
-            // Add click listener to list item
             propertyItem.addEventListener('click', function () {
-                // Open info window for this property
                 const marker = markers[property.id];
-                const content = `
-                    <div>
-                        <h4>${property.title}</h4>
-                        <p>${property.address}</p>
-                        <p><strong>$${property.price.toLocaleString()}</strong></p>
-                        <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
-                        <p>Status: ${property.status}</p>
-                        <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
-                    </div>
-                `;
-
-                infoWindow.setContent(content);
-                infoWindow.open(map, marker);
-
-                // Pan to this marker
-                map.panTo(marker.getPosition());
-
-                // Highlight this property in list
-                highlightProperty(property.id);
+                if (marker) {
+                    const ll = marker.getLngLat();
+                    map.flyTo({ center: ll, zoom: 14 });
+                    marker.togglePopup();
+                    highlightProperty(property.id);
+                }
             });
-
             propertyList.appendChild(propertyItem);
         });
-    }
+    };
 
     function highlightProperty(propertyId) {
-        // Remove active class from all property items
         document.querySelectorAll('.property-item').forEach(function (item) {
             item.classList.remove('active');
         });
-
-        // Add active class to selected property
         const selectedProperty = document.getElementById(`property-${propertyId}`);
         if (selectedProperty) {
             selectedProperty.classList.add('active');

@@ -3,7 +3,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css?v=20250816" />
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <style>
     .container {
         width: 100%;
@@ -256,7 +256,7 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js?v=20250816"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
     // Debugging helper function
     function debug(message) {
@@ -266,7 +266,7 @@
         // if (debugDiv) debugDiv.innerHTML += '<p>' + message + '</p>';
     }
 
-    debug("Map view script loading...");
+    debug("Map view script loading (Mapbox)...");
 
     // Wait a bit to ensure DOM is ready
     setTimeout(function () {
@@ -281,34 +281,26 @@
             }
             debug("Map container found with dimensions: " + mapContainer.clientWidth + "x" + mapContainer.clientHeight);
 
-            // Check if Leaflet is loaded
-            if (typeof L === 'undefined') {
-                console.error("Leaflet library not loaded!");
-                mapContainer.innerHTML = '<div style="padding: 20px; background-color: #ffeeee; color: #cc0000; text-align: center;"><h3>Error: Leaflet mapping library failed to load</h3><p>Please check your internet connection or try refreshing the page.</p></div>';
+            // Initialize Mapbox map
+            if (!('{{ mapbox_access_token|default:"" }}')) {
+                mapContainer.innerHTML = '<div style="padding: 20px; background-color: #fff3cd; color: #664d03; text-align: center;"><h3>Mapbox token missing</h3><p>Set MAPBOX_ACCESS_TOKEN in backend environment.</p></div>';
                 return;
             }
-            debug("Leaflet library loaded: " + L.version);
 
-            // Initialize Leaflet map
-            var map = L.map('map').setView([39.8283, -98.5795], 4);
+            mapboxgl.accessToken = '{{ mapbox_access_token|default:"" }}';
+            var styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: styleUrl,
+                center: [-98.5795, 39.8283],
+                zoom: 4
+            });
             debug("Map initialized");
-
-            var hasValidProperties = false;
-
-            // Add OpenStreetMap tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            debug("Tile layer added");
-
-            // Force map to recalculate size after it's displayed
-            setTimeout(function () {
-                map.invalidateSize();
-                debug("Map size recalculated");
-            }, 100);
 
             var markers = {};
             var properties = [];
+            var bounds = new mapboxgl.LngLatBounds();
+            var hasValidProperties = false;
 
             try {
                 var propertiesJson = '{{ properties_json|escapejs }}';
@@ -324,22 +316,29 @@
             properties.forEach(function (property) {
                 try {
                     if (property.latitude && property.longitude) {
-                        debug("Adding marker for property " + property.id + " at " + property.latitude + ", " + property.longitude);
                         hasValidProperties = true;
-                        var marker = L.marker([property.latitude, property.longitude])
-                            .addTo(map)
-                            .bindPopup(
+                        var el = document.createElement('div');
+                        el.style.background = '#e11d48';
+                        el.style.width = '12px';
+                        el.style.height = '12px';
+                        el.style.borderRadius = '50%';
+                        el.style.boxShadow = '0 0 0 2px white';
+
+                        var marker = new mapboxgl.Marker(el)
+                            .setLngLat([property.longitude, property.latitude])
+                            .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML(
                                 '<strong>' + property.title + '</strong><br>' +
                                 property.address_line1 + ', ' + property.city + ', ' + property.state + '<br>' +
                                 property.bedrooms + ' bd | ' + property.bathrooms + ' ba | ' + property.square_feet + ' sqft<br>' +
-                                '<strong>$' + property.price.toLocaleString() + '</strong><br>' +
+                                '<strong>$' + Number(property.price).toLocaleString() + '</strong><br>' +
                                 '<a href="/admin/properties/property/' + property.id + '/change/" target="_blank">Edit Property</a>'
-                            );
+                            ))
+                            .addTo(map);
 
-                        marker.propertyId = property.id;
                         markers[property.id] = marker;
+                        bounds.extend([property.longitude, property.latitude]);
 
-                        marker.on('click', function () {
+                        marker.getElement().addEventListener('click', function () {
                             highlightProperty(property.id);
                         });
                     }
@@ -349,25 +348,11 @@
                 }
             });
 
-            // Check if we have any properties with valid coordinates
-            if (hasValidProperties) {
-                debug("Found valid properties, fitting bounds");
-                // Auto-fit map to show all markers
-                var bounds = [];
-                Object.values(markers).forEach(function (marker) {
-                    bounds.push([marker._latlng.lat, marker._latlng.lng]);
-                });
-
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds);
-                    debug("Map bounds adjusted to show all properties");
-                }
+            if (hasValidProperties && !bounds.isEmpty()) {
+                map.fitBounds(bounds, { padding: 40, maxZoom: 14 });
+                debug("Map bounds adjusted to show all properties");
             } else {
                 debug("No valid properties found");
-                // No valid coordinates, show a message on the map
-                var noPropertiesMsg = L.DomUtil.create('div', 'no-properties-message');
-                noPropertiesMsg.innerHTML = '<p style="text-align: center; padding: 20px;">No properties with coordinates found. Add latitude/longitude to properties to see them on the map.</p>';
-                map.getContainer().appendChild(noPropertiesMsg);
             }
 
             // Property list click handler
@@ -377,8 +362,9 @@
                     var marker = markers[propertyId];
 
                     if (marker) {
-                        map.setView([marker._latlng.lat, marker._latlng.lng], 14);
-                        marker.openPopup();
+                        var ll = marker.getLngLat();
+                        map.flyTo({ center: ll, zoom: 14 });
+                        marker.togglePopup();
                         highlightProperty(propertyId);
                     }
                 });

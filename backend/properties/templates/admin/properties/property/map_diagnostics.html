@@ -3,15 +3,9 @@
 
 {% block extrahead %}
 {{ block.super }}
-<!-- Load Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-<!-- Load Google Maps API -->
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
-
-<!-- Load MarkerClusterer -->
-<script src="https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js"></script>
+<!-- Mapbox GL JS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 {% endblock %}
 
 {% block extrastyle %}
@@ -58,7 +52,7 @@
     }
 
     #debug-log {
-        max-height: 200px;
+        max-height: 220px;
         overflow-y: auto;
         font-family: monospace;
         font-size: 12px;
@@ -87,8 +81,8 @@
 {% endblock %}
 
 {% block content %}
-<h1>Map Diagnostics</h1>
-<p>This page will test different mapping libraries and configurations to help identify issues.</p>
+<h1>Map Diagnostics (Mapbox)</h1>
+<p>Mapbox-only diagnostics page to verify resources, token, style, network connectivity, and render.</p>
 
 <div id="debug-log"></div>
 
@@ -96,35 +90,26 @@
 <div id="resource-test" class="test-section">
     <h2 class="test-heading">Resource Loading Test</h2>
     <div id="resource-list">
-        <p>Google Maps API: <span id="google-api-status">Checking...</span></p>
-        <p>Leaflet API: <span id="leaflet-api-status">Checking...</span></p>
-        <p>MarkerClusterer: <span id="markerclusterer-status">Checking...</span></p>
+        <p>Mapbox GL JS: <span id="mapbox-js-status">Checking...</span></p>
+        <p>Mapbox GL CSS: <span id="mapbox-css-status">Checking...</span></p>
+        <p>Access Token: <span id="token-status">Checking...</span></p>
+        <p>Style URL: <span id="style-status">Checking...</span></p>
     </div>
     <div id="resource-status" class="test-status test-pending">Checking resources...</div>
+    <div class="test-status" id="config-values" style="font-family: monospace; white-space: pre-wrap;"></div>
+
 </div>
 
-<!-- Google Maps Test -->
-<div id="google-maps-test" class="test-section">
-    <h2 class="test-heading">Google Maps Test</h2>
-    <div id="google-map" class="test-map"></div>
-    <div id="google-map-status" class="test-status test-pending">Running test...</div>
+<!-- Mapbox Render Test -->
+<div id="mapbox-test" class="test-section">
+    <h2 class="test-heading">Mapbox Render Test</h2>
+    <div id="mapbox-map" class="test-map"></div>
+    <div id="mapbox-status" class="test-status test-pending">Waiting for map...</div>
+    <div id="mapbox-events" style="font-family: monospace; font-size: 12px;"></div>
+
 </div>
 
-<!-- Google Maps Clustering Test -->
-<div id="google-clustering-test" class="test-section">
-    <h2 class="test-heading">Google Maps Clustering Test</h2>
-    <div id="google-cluster-map" class="test-map"></div>
-    <div id="google-cluster-status" class="test-status test-pending">Running test...</div>
-</div>
-
-<!-- Leaflet Test -->
-<div id="leaflet-test" class="test-section">
-    <h2 class="test-heading">Leaflet Test</h2>
-    <div id="leaflet-map" class="test-map"></div>
-    <div id="leaflet-map-status" class="test-status test-pending">Running test...</div>
-</div>
-
-<!-- Property Data Test -->
+<!-- Property Data Test (Mapbox format) -->
 <div id="property-data-test" class="test-section">
     <h2 class="test-heading">Property Data Format Test</h2>
     <div id="property-data-display" style="font-family: monospace; white-space: pre-wrap;"></div>
@@ -154,413 +139,193 @@
         entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
         logDiv.appendChild(entry);
         logDiv.scrollTop = logDiv.scrollHeight;
-        console.log(message);
+        if (type === 'error') console.error(message); else console.log(message);
     }
 
-    // Update test status
     function updateStatus(elementId, success, message) {
         const statusDiv = document.getElementById(elementId);
         statusDiv.textContent = message;
         statusDiv.className = `test-status ${success ? 'test-success' : 'test-failure'}`;
     }
 
-    // Check if a script is loaded
-    function isScriptLoaded(url) {
-        return document.querySelectorAll(`script[src="${url}"]`).length > 0;
-    }
-
-    // Load script dynamically
-    function loadScript(url, callback) {
-        log(`Loading script: ${url}`);
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = url;
-        script.onload = function () {
-            log(`Script loaded successfully: ${url}`, 'success');
-            callback(true);
-        };
-        script.onerror = function () {
-            log(`Failed to load script: ${url}`, 'error');
-            callback(false);
-        };
-        document.head.appendChild(script);
-    }
-
-    // Check for resource availability
     function checkResources() {
-        log('Checking for required resources');
+        log('Checking Mapbox resources');
+        const token = '{{ mapbox_access_token|default:"" }}';
+        const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
 
-        // Check Google Maps
-        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-            document.getElementById('google-api-status').textContent = 'Loaded ✓';
-            document.getElementById('google-api-status').style.color = 'green';
-            log('Google Maps API already loaded', 'success');
-        } else {
-            document.getElementById('google-api-status').textContent = 'Not loaded ✗';
-            document.getElementById('google-api-status').style.color = 'red';
-            log('Google Maps API not loaded', 'info');
-        }
+        // Mapbox JS
+        const jsLoaded = typeof mapboxgl !== 'undefined';
+        document.getElementById('mapbox-js-status').textContent = jsLoaded ? 'Loaded ✓' : 'Not loaded ✗';
+        document.getElementById('mapbox-js-status').style.color = jsLoaded ? 'green' : 'red';
 
-        // Check Leaflet
-        if (typeof L !== 'undefined') {
-            document.getElementById('leaflet-api-status').textContent = `Loaded ✓ (v${L.version})`;
-            document.getElementById('leaflet-api-status').style.color = 'green';
-            log(`Leaflet API already loaded (v${L.version})`, 'success');
-        } else {
-            document.getElementById('leaflet-api-status').textContent = 'Not loaded ✗';
-            document.getElementById('leaflet-api-status').style.color = 'red';
-            log('Leaflet API not loaded', 'info');
-        }
+        // Mapbox CSS
+        const cssLoaded = !!document.querySelector('link[href*="mapbox-gl.css"]');
+        document.getElementById('mapbox-css-status').textContent = cssLoaded ? 'Loaded ✓' : 'Not loaded ✗';
+        document.getElementById('mapbox-css-status').style.color = cssLoaded ? 'green' : 'red';
 
-        // Check MarkerClusterer
-        if (typeof MarkerClusterer !== 'undefined') {
-            document.getElementById('markerclusterer-status').textContent = 'Loaded ✓';
-            document.getElementById('markerclusterer-status').style.color = 'green';
-            log('MarkerClusterer already loaded', 'success');
-        } else {
-            document.getElementById('markerclusterer-status').textContent = 'Not loaded ✗';
-            document.getElementById('markerclusterer-status').style.color = 'red';
-            log('MarkerClusterer not loaded', 'info');
+        // Token
+        const hasToken = !!token;
+        document.getElementById('token-status').textContent = hasToken ? 'Present ✓' : 'Missing ✗';
+        document.getElementById('token-status').style.color = hasToken ? 'green' : 'red';
 
-            // Try to load MarkerClusterer
-            loadScript('https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js', function (success) {
-                if (success) {
-                    document.getElementById('markerclusterer-status').textContent = 'Loaded ✓ (Dynamically)';
-                    document.getElementById('markerclusterer-status').style.color = 'green';
-                    log('MarkerClusterer loaded dynamically', 'success');
-                }
-            });
-        }
+        // Style URL
+        const hasStyle = !!styleUrl;
+        document.getElementById('style-status').textContent = hasStyle ? 'Present ✓' : 'Missing ✗';
+        document.getElementById('style-status').style.color = hasStyle ? 'green' : 'red';
 
-        updateStatus('resource-status', true, 'Resource check complete');
+        document.getElementById('config-values').textContent = `Token: ${hasToken ? token.slice(0, 10) + '…' : '(none)'}\nStyle: ${styleUrl}`;
+
+        const ok = jsLoaded && cssLoaded && hasToken && hasStyle;
+        updateStatus('resource-status', ok, ok ? 'All required resources are available' : 'Missing required resources');
+        return { token, styleUrl };
     }
 
-    // Test Google Maps
-    function testGoogleMaps() {
-        log('Starting Google Maps test');
-
-        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-            initGoogleMap();
-        } else {
-            loadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&callback=initGoogleMap', function (success) {
-                if (!success) {
-                    updateStatus('google-map-status', false, 'Failed to load Google Maps API');
-                }
-            });
+    function runMapboxRenderTest(token, styleUrl) {
+        log('Starting Mapbox render test');
+        if (!token) {
+            updateStatus('mapbox-status', false, 'Missing Mapbox access token');
+            return;
         }
-    }
-
-    // Initialize Google Maps
-    function initGoogleMap() {
+        mapboxgl.accessToken = token;
         try {
-            log('Initializing Google Map');
-            const map = new google.maps.Map(document.getElementById('google-map'), {
-                center: { lat: 39.8283, lng: -98.5795 },
-                zoom: 4
+            const map = new mapboxgl.Map({
+                container: 'mapbox-map',
+                style: styleUrl,
+                center: [-98.5795, 39.8283],
+                zoom: 3.8,
+            });
+            map.addControl(new mapboxgl.NavigationControl());
+
+            const eventsDiv = document.getElementById('mapbox-events');
+            const note = (msg) => { const p = document.createElement('div'); p.textContent = msg; eventsDiv.appendChild(p); };
+
+            map.on('load', () => {
+                log('Mapbox map loaded', 'success');
+                updateStatus('mapbox-status', true, 'Map rendered successfully');
+
+                // Add a simple marker and popup
+                const marker = new mapboxgl.Marker()
+                    .setLngLat([-98.5795, 39.8283])
+                    .setPopup(new mapboxgl.Popup().setHTML('<strong>USA Center</strong>'))
+                    .addTo(map);
+
+                marker.getElement().addEventListener('click', () => log('Marker clicked'));
+
+                // Add a tiny GeoJSON source/layer as a smoke test
+                const geojson = {
+                    type: 'FeatureCollection',
+                    features: [
+                        { type: 'Feature', properties: { name: 'Denver' }, geometry: { type: 'Point', coordinates: [-104.9903, 39.7392] } },
+                        { type: 'Feature', properties: { name: 'Chicago' }, geometry: { type: 'Point', coordinates: [-87.6298, 41.8781] } },
+                    ]
+                };
+                map.addSource('cities', { type: 'geojson', data: geojson });
+                map.addLayer({ id: 'cities-layer', type: 'circle', source: 'cities', paint: { 'circle-radius': 6, 'circle-color': '#1d4ed8' } });
+                note('Added cities layer');
             });
 
-            // Add a test marker
-            const marker = new google.maps.Marker({
-                position: { lat: 39.8283, lng: -98.5795 },
-                map: map,
-                title: 'Test Marker'
-            });
-
-            // Add info window
-            const infowindow = new google.maps.InfoWindow({
-                content: '<div><strong>Test Marker</strong><br>This is a test marker</div>'
-            });
-
-            marker.addListener('click', function () {
-                infowindow.open(map, marker);
-            });
-
-            updateStatus('google-map-status', true, 'Google Maps loaded successfully');
-            log('Google Maps initialized successfully', 'success');
+            map.on('error', (e) => { log('Map error: ' + (e && e.error ? e.error.message : 'unknown'), 'error'); });
+            map.on('idle', () => { note('Map idle'); });
         } catch (e) {
-            log(`Google Maps error: ${e.message}`, 'error');
-            updateStatus('google-map-status', false, `Error: ${e.message}`);
+            updateStatus('mapbox-status', false, 'Error creating map: ' + e.message);
+            log('Mapbox render error: ' + e.message, 'error');
         }
     }
 
-    // Test Google Maps Clustering
-    function testGoogleMapsClustering() {
-        log('Starting Google Maps clustering test');
-
-        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-            if (typeof MarkerClusterer !== 'undefined') {
-                initGoogleClusterMap();
-            } else {
-                loadScript('https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js', function (success) {
-                    if (success) {
-                        initGoogleClusterMap();
-                    } else {
-                        updateStatus('google-cluster-status', false, 'Failed to load MarkerClusterer');
-                    }
-                });
-            }
-        } else {
-            loadScript('https://maps.googleapis.com/maps/api/js?v=3.exp', function (success) {
-                if (success) {
-                    loadScript('https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js', function (success) {
-                        if (success) {
-                            initGoogleClusterMap();
-                        } else {
-                            updateStatus('google-cluster-status', false, 'Failed to load MarkerClusterer');
-                        }
-                    });
-                } else {
-                    updateStatus('google-cluster-status', false, 'Failed to load Google Maps API');
-                }
-            });
-        }
-    }
-
-    // Initialize Google Maps with Clustering
-    function initGoogleClusterMap() {
-        try {
-            log('Initializing Google Maps with clustering');
-            const map = new google.maps.Map(document.getElementById('google-cluster-map'), {
-                center: { lat: 39.8283, lng: -98.5795 },
-                zoom: 4
-            });
-
-            // Create test data points for clustering
-            const locations = [
-                { lat: 39.8283, lng: -98.5795 },
-                { lat: 39.8383, lng: -98.5895 },
-                { lat: 39.8183, lng: -98.5695 },
-                { lat: 39.8483, lng: -98.5995 },
-                { lat: 39.8083, lng: -98.5595 },
-                { lat: 40.0283, lng: -98.5795 },
-                { lat: 39.6283, lng: -98.5795 },
-                { lat: 39.8283, lng: -98.7795 },
-                { lat: 39.8283, lng: -98.3795 },
-                { lat: 38.8283, lng: -98.5795 },
-            ];
-
-            // Create markers
-            const markers = locations.map((location, i) => {
-                return new google.maps.Marker({
-                    position: location,
-                    label: `${i + 1}`
-                });
-            });
-
-            // Create MarkerClusterer
-            try {
-                const markerCluster = new MarkerClusterer({ map, markers });
-                updateStatus('google-cluster-status', true, 'MarkerClusterer initialized successfully');
-                log('MarkerClusterer initialized with ' + markers.length + ' markers', 'success');
-            } catch (clusterError) {
-                log(`MarkerClusterer error: ${clusterError.message}`, 'error');
-                updateStatus('google-cluster-status', false, `MarkerClusterer error: ${clusterError.message}`);
-
-                // Try alternative initialization if needed
-                try {
-                    log('Trying alternative MarkerClusterer initialization');
-                    if (typeof MarkerClusterer.prototype.addMarkers !== 'undefined') {
-                        // Old MarkerClusterer API
-                        const oldMarkerCluster = new MarkerClusterer(map, markers, {
-                            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-                        });
-                        updateStatus('google-cluster-status', true, 'Old-style MarkerClusterer initialized successfully');
-                        log('Old-style MarkerClusterer initialized', 'success');
-                    }
-                } catch (altError) {
-                    log(`Alternative MarkerClusterer error: ${altError.message}`, 'error');
-                }
-            }
-        } catch (e) {
-            log(`Google Maps clustering error: ${e.message}`, 'error');
-            updateStatus('google-cluster-status', false, `Error: ${e.message}`);
-        }
-    }
-
-    // Test Leaflet
-    function testLeaflet() {
-        log('Starting Leaflet test');
-
-        loadScript('https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', function (success) {
-            if (!success) {
-                updateStatus('leaflet-map-status', false, 'Failed to load Leaflet API');
-                return;
-            }
-
-            // Add Leaflet CSS
-            if (!document.querySelector('link[href*="leaflet.css"]')) {
-                log('Adding Leaflet CSS');
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css';
-                document.head.appendChild(link);
-            }
-
-            setTimeout(initLeafletMap, 500); // Give CSS time to load
-        });
-    }
-
-    // Initialize Leaflet Map
-    function initLeafletMap() {
-        try {
-            log('Initializing Leaflet Map');
-            const map = L.map('leaflet-map').setView([39.8283, -98.5795], 4);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Add a test marker
-            L.marker([39.8283, -98.5795])
-                .addTo(map)
-                .bindPopup('Test Marker')
-                .openPopup();
-
-            updateStatus('leaflet-map-status', true, 'Leaflet loaded successfully');
-            log('Leaflet initialized successfully', 'success');
-        } catch (e) {
-            log(`Leaflet error: ${e.message}`, 'error');
-            updateStatus('leaflet-map-status', false, `Error: ${e.message}`);
-        }
-    }
-
-    // Test network connectivity
-    function testNetworkConnectivity() {
-        log('Testing network connectivity');
-
+    function testNetworkConnectivity(token, styleUrl) {
+        log('Testing network connectivity to Mapbox');
         const urls = [
-            'https://maps.googleapis.com/maps/api/js?v=3.exp',
-            'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js',
-            'https://tile.openstreetmap.org/0/0/0.png'
+            'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js',
+            'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css',
         ];
+        if (token) {
+            // Attempt to hit a style endpoint (will likely be 200 if token is valid)
+            const styleEndpoint = `https://api.mapbox.com/styles/v1/${encodeURIComponent(styleUrl.replace('mapbox://styles/', ''))}?access_token=${encodeURIComponent(token)}`;
+            urls.push(styleEndpoint);
+        }
 
-        let succeeded = 0;
-        let failed = 0;
-        let total = urls.length;
-
+        let succeeded = 0, failed = 0, total = urls.length;
         urls.forEach(url => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('HEAD', url, true);
-            xhr.onload = function () {
-                log(`Connection to ${url} succeeded`, 'success');
-                succeeded++;
-                checkComplete();
-            };
-            xhr.onerror = function () {
-                log(`Connection to ${url} failed`, 'error');
-                failed++;
-                checkComplete();
-            };
-            xhr.send();
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('HEAD', url, true);
+                xhr.onload = function () { log(`HEAD ${url} -> ${xhr.status}`, xhr.status < 400 ? 'success' : 'error'); (xhr.status < 400 ? succeeded : failed)++; checkComplete(); };
+                xhr.onerror = function () { log(`HEAD ${url} -> network error`, 'error'); failed++; checkComplete(); };
+                xhr.send();
+            } catch (e) { log(`HEAD ${url} -> exception ${e.message}`, 'error'); failed++; checkComplete(); }
         });
-
         function checkComplete() {
             if (succeeded + failed === total) {
-                if (failed > 0) {
-                    updateStatus('network-status', false,
-                        `Network test completed: ${succeeded} succeeded, ${failed} failed`);
-                } else {
-                    updateStatus('network-status', true,
-                        `All network connections successful`);
-                }
+                const ok = failed === 0;
+                updateStatus('network-status', ok, ok ? `All ${total} checks passed` : `${failed} of ${total} checks failed`);
             }
         }
     }
 
-    // Display browser information
     function showBrowserInfo() {
-        const browserInfoDiv = document.getElementById('browser-info');
+        const el = document.getElementById('browser-info');
         const info = [
             `User Agent: ${navigator.userAgent}`,
             `Platform: ${navigator.platform}`,
             `Cookies Enabled: ${navigator.cookieEnabled}`,
             `Language: ${navigator.language}`,
             `Online: ${navigator.onLine}`,
-            `Screen Resolution: ${window.screen.width} x ${window.screen.height}`,
-            `Window Size: ${window.innerWidth} x ${window.innerHeight}`
+            `Screen: ${window.screen.width} x ${window.screen.height}`,
+            `Window: ${window.innerWidth} x ${window.innerHeight}`,
         ];
-
-        browserInfoDiv.innerHTML = info.map(item => `<p>${item}</p>`).join('');
+        el.innerHTML = info.map(i => `<p>${i}</p>`).join('');
     }
 
-    // Test property data formatting
     function testPropertyData() {
-        log('Testing property data formatting');
-
+        log('Testing property data formatting for Mapbox');
         try {
-            // Sample property data
             const sampleProperty = {
                 id: 1,
-                title: "Test Property",
-                address: "123 Test Street, Testville",
+                title: 'Test Property',
+                address: '123 Test Street, Testville',
                 latitude: 39.8283,
                 longitude: -98.5795,
                 price: 350000,
-                status: "For Sale",
-                property_type: "House",
+                status: 'For Sale',
+                property_type: 'House',
                 bedrooms: 3,
                 bathrooms: 2,
-                square_feet: 1800
+                square_feet: 1800,
             };
 
-            // Format for Leaflet
-            const leafletFormat = {
-                id: sampleProperty.id,
-                latlng: [sampleProperty.latitude, sampleProperty.longitude],
-                popupContent: `
-                    <div class="property-popup">
-                        <h3>${sampleProperty.title}</h3>
-                        <p>${sampleProperty.address}</p>
-                        <p>$${sampleProperty.price.toLocaleString()}</p>
-                        <p>${sampleProperty.bedrooms} bd | ${sampleProperty.bathrooms} ba | ${sampleProperty.square_feet} sqft</p>
-                    </div>
-                `
+            const mapboxFeature = {
+                type: 'Feature',
+                properties: {
+                    id: sampleProperty.id,
+                    title: sampleProperty.title,
+                    address: sampleProperty.address,
+                    price: sampleProperty.price,
+                },
+                geometry: { type: 'Point', coordinates: [sampleProperty.longitude, sampleProperty.latitude] },
             };
 
-            // Format for Google Maps
-            const googleFormat = {
-                position: { lat: sampleProperty.latitude, lng: sampleProperty.longitude },
-                title: sampleProperty.title,
-                infoContent: `
-                    <div class="property-info">
-                        <h3>${sampleProperty.title}</h3>
-                        <p>${sampleProperty.address}</p>
-                        <p>$${sampleProperty.price.toLocaleString()}</p>
-                        <p>${sampleProperty.bedrooms} bd | ${sampleProperty.bathrooms} ba | ${sampleProperty.square_feet} sqft</p>
-                    </div>
-                `
-            };
-
-            // Display formatted data
             const dataDisplay = document.getElementById('property-data-display');
             dataDisplay.innerHTML = `
                 <h3>Sample Property:</h3>
                 <pre>${JSON.stringify(sampleProperty, null, 2)}</pre>
-                
-                <h3>Leaflet Format:</h3>
-                <pre>${JSON.stringify(leafletFormat, null, 2)}</pre>
-                
-                <h3>Google Maps Format:</h3>
-                <pre>${JSON.stringify(googleFormat, null, 2)}</pre>
+                <h3>Mapbox GeoJSON Feature:</h3>
+                <pre>${JSON.stringify(mapboxFeature, null, 2)}</pre>
             `;
 
             updateStatus('property-data-status', true, 'Property data formatting successful');
             log('Property data formatting test complete', 'success');
         } catch (e) {
             updateStatus('property-data-status', false, `Error: ${e.message}`);
-            log(`Property data formatting error: ${e.message}`, 'error');
+            log('Property data formatting error: ' + e.message, 'error');
         }
     }
 
-    // Run all tests
     document.addEventListener('DOMContentLoaded', function () {
-        log('Starting map diagnostics tests');
+        log('Starting Mapbox diagnostics');
         showBrowserInfo();
-        checkResources();
-        testNetworkConnectivity();
-        testGoogleMaps();
-        testGoogleMapsClustering();
-        testLeaflet();
+        const { token, styleUrl } = checkResources();
+        testNetworkConnectivity(token, styleUrl);
+        runMapboxRenderTest(token, styleUrl);
         testPropertyData();
     });
 </script>

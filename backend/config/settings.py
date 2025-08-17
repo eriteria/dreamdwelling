@@ -213,6 +213,15 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 # Google Maps API Key
 GOOGLE_MAPS_API_KEY = os.environ.get("GOOGLE_MAPS_API_KEY", "")
 
+# Mapbox configuration
+# Backend admin templates use Mapbox GL JS; set your token/style via environment or here for dev.
+MAPBOX_ACCESS_TOKEN = os.environ.get(
+    "MAPBOX_ACCESS_TOKEN",
+    "pk.eyJ1IjoiZXJpdGVyaWEiLCJhIjoiY2xmOHRvZHBhMWk0bzNzbzRhcjR5cTlsMCJ9.7H3nPJvvQf73TUsuFk-bIw",
+)
+# Default to a standard Mapbox style; override via env if you prefer a custom style
+MAPBOX_STYLE = os.environ.get("MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12")
+
 # Redis cache
 CACHES = {
     "default": {

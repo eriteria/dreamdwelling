@@ -89,7 +89,8 @@ export function PopupCard({ property }: { property: Property }) {
         </span>
       </div>
       <div style={{ marginTop: 4, fontSize: 12, color: "#9ca3af" }}>
-        Coordinates: {property.latitude.toFixed(6)}, {property.longitude.toFixed(6)}
+        Coordinates: {property.latitude.toFixed(6)},{" "}
+        {property.longitude.toFixed(6)}
       </div>
     </div>
   );

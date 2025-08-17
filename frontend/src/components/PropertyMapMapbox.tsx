@@ -43,7 +43,9 @@ export default function PropertyMapMapbox({
   onPropertyClick,
   selectedPropertyId,
 }: PropertyMapMapboxProps) {
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string | undefined;
+  const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN as
+    | string
+    | undefined;
   const mapRef = useRef<MapRef | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const [ready, setReady] = useState(false);
@@ -90,7 +92,7 @@ export default function PropertyMapMapbox({
       return;
     }
 
-  const bounds = new mapboxgl.LngLatBounds();
+    const bounds = new mapboxgl.LngLatBounds();
     validProps.forEach((p) => bounds.extend([p.longitude, p.latitude]));
     map.fitBounds(bounds, { padding: 40, duration: 800 });
   }, [validProps, center, zoom]);
@@ -108,8 +110,8 @@ export default function PropertyMapMapbox({
         <div className="text-yellow-700 dark:text-yellow-300 text-center p-4">
           <p className="font-medium">Mapbox token missing</p>
           <p className="text-sm">
-            Set NEXT_PUBLIC_MAPBOX_TOKEN in your environment to use the Mapbox
-            map.
+            Set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your environment to use the
+            Mapbox map.
           </p>
         </div>
       </div>
@@ -120,7 +122,26 @@ export default function PropertyMapMapbox({
     <div className="rounded-lg overflow-hidden shadow-lg" style={{ height }}>
       <Map
         ref={mapRef}
-        onLoad={() => setReady(true)}
+        onLoad={() => {
+          setReady(true);
+          // Workaround for Mapbox GL fog-related runtime errors in some versions/styles
+          try {
+            const map = mapRef.current?.getMap?.();
+            if (map && typeof (map as any).setFog === "function") {
+              // Ensure fog object exists to avoid internal accesses to undefined
+              (map as any).setFog({});
+            }
+          } catch {}
+        }}
+        // Set fog as early as possible when style data is available
+        onStyleData={() => {
+          try {
+            const map = mapRef.current?.getMap?.();
+            if (map && typeof (map as any).setFog === "function") {
+              (map as any).setFog({});
+            }
+          } catch {}
+        }}
         mapboxAccessToken={token}
         initialViewState={{ longitude: center[1], latitude: center[0], zoom }}
         mapStyle="mapbox://styles/mapbox/streets-v12"

@@ -3,6 +3,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <style>
     #map {
         width: 100%;
@@ -96,57 +97,36 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default:'' }}"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
-    // Map styles
-    const mapStyles = {{ map_style|default: '[]' | safe }};
-
-    // Initialize the map when the page loads
     window.onload = function () {
-        initMap();
+        if (!("{{ mapbox_access_token|default:'' }}")) {
+            document.getElementById('map').innerHTML = '<div style="padding: 20px; text-align: center; background-color: #fff3cd; color: #664d03;">Missing MAPBOX_ACCESS_TOKEN</div>';
+            return;
+        }
+        mapboxgl.accessToken = '{{ mapbox_access_token|default:"" }}';
+        const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+        const lat = parseFloat('{{ property.latitude|default:"0" }}');
+        const lng = parseFloat('{{ property.longitude|default:"0" }}');
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: styleUrl,
+            center: [lng, lat],
+            zoom: 15
+        });
+        const popupHtml =
+            '<div>' +
+            '<h3>{{ property.title|escape }}</h3>' +
+            '<p>{{ property.address_line1|escape }}, {{ property.city|escape }}, {{ property.state|escape }}</p>' +
+            '<p><strong>$' + new Intl.NumberFormat('en-US').format(parseFloat('{{ property.price|default:"0" }}')) + '</strong></p>' +
+            '<p>{{ property.bedrooms }} bd | {{ property.bathrooms }} ba | {{ property.square_feet|intcomma }} sqft</p>' +
+            '</div>';
+
+        const marker = new mapboxgl.Marker()
+            .setLngLat([lng, lat])
+            .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML(popupHtml))
+            .addTo(map);
+        marker.togglePopup();
     };
-
-    function initMap() {
-        const propertyPosition = {
-            lat: {{ property.latitude }
-    },
-    lng: { { property.longitude } }
-        };
-
-    // Create map centered on the property
-    const map = new google.maps.Map(document.getElementById('map'), {
-        center: propertyPosition,
-        zoom: 15,
-        styles: mapStyles
-    });
-
-    // Add marker for the property
-    const marker = new google.maps.Marker({
-        position: propertyPosition,
-        map: map,
-        title: '{{ property.title }}',
-        animation: google.maps.Animation.DROP
-    });
-
-    // Add info window with property details
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-                <div>
-                    <h3>{{ property.title }}</h3>
-                    <p>{{ property.address_line1 }}, {{ property.city }}, {{ property.state }}</p>
-                    <p><strong>${{ property.price | intcomma }}</strong></p>
-                    <p>{{ property.bedrooms }} bd | {{ property.bathrooms }} ba | {{ property.square_feet|intcomma }} sqft</p>
-                </div>
-            `
-    });
-
-    // Open info window when marker is clicked
-    marker.addListener('click', function () {
-        infoWindow.open(map, marker);
-    });
-
-    // Open info window by default
-    infoWindow.open(map, marker);
-    }
 </script>
 {% endblock %}

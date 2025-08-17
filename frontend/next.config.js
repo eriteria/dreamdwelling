@@ -2,11 +2,28 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      "localhost",
-      "dreamdwelling.com",
-      "images.unsplash.com",
-      "picsum.photos",
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "*",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "dreamdwelling.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        pathname: "/**",
+      },
     ],
   },
   env: {

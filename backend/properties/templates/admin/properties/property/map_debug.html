@@ -3,15 +3,8 @@
 
 {% block extrahead %}
 {{ block.super }}
-<!-- Load Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-<!-- Load Google Maps API -->
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp" async defer></script>
-
-<!-- Load MarkerClusterer -->
-<script src="https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 {% endblock %}
 
 {% block extrastyle %}
@@ -70,19 +63,12 @@
 
     <div id="resource-status" class="module">
         <h2>Resource Status</h2>
-        <div id="leaflet-status" class="resource-status">Checking Leaflet...</div>
-        <div id="google-status" class="resource-status">Checking Google Maps...</div>
-        <div id="cluster-status" class="resource-status">Checking MarkerClusterer...</div>
+        <div id="mapbox-status" class="resource-status">Checking Mapbox...</div>
     </div>
 
     <div class="module">
-        <h2>Leaflet Test</h2>
-        <div id="leaflet-map" class="test-map"></div>
-    </div>
-
-    <div class="module">
-        <h2>Google Maps Test</h2>
-        <div id="google-map" class="test-map"></div>
+        <h2>Mapbox Test</h2>
+        <div id="mapbox-map" class="test-map"></div>
     </div>
 
     <div class="module">
@@ -124,135 +110,37 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         log('Starting map resource tests...');
-
-        // Check resources
-        setTimeout(checkResources, 500);
-    });
-
-    function checkResources() {
-        log('Checking map resources...');
-
-        // Check Leaflet
-        if (typeof L !== 'undefined') {
-            updateStatus('leaflet-status', true, L.version);
-            log('Leaflet loaded successfully', 'success');
-            initLeafletMap();
+        // Check Mapbox
+        if (typeof mapboxgl !== 'undefined') {
+            updateStatus('mapbox-status', true, mapboxgl.version);
+            log('Mapbox GL loaded successfully', 'success');
+            initMapboxMap();
         } else {
-            updateStatus('leaflet-status', false);
-            log('Leaflet failed to load', 'error');
+            updateStatus('mapbox-status', false);
+            log('Mapbox GL failed to load', 'error');
         }
 
-        // Check Google Maps
-        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-            updateStatus('google-status', true);
-            log('Google Maps loaded successfully', 'success');
-            initGoogleMap();
-        } else {
-            updateStatus('google-status', false);
-            log('Google Maps not loaded yet', 'info');
-            log('Will retry in 2 seconds...', 'info');
-            setTimeout(function () {
-                if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-                    updateStatus('google-status', true);
-                    log('Google Maps loaded successfully on retry', 'success');
-                    initGoogleMap();
-                } else {
-                    log('Google Maps failed to load after retry', 'error');
+        function initMapboxMap() {
+            try {
+                if (!("{{ mapbox_access_token|default:'' }}")) {
+                    log('Missing MAPBOX_ACCESS_TOKEN in backend', 'error');
+                    document.getElementById('mapbox-map').innerHTML = '<div style="padding: 10px; background:#fff3cd; color:#664d03;">Missing MAPBOX_ACCESS_TOKEN</div>';
+                    return;
                 }
-            }, 2000);
-        }
-
-        // Check MarkerClusterer
-        if (typeof MarkerClusterer !== 'undefined') {
-            updateStatus('cluster-status', true);
-            log('MarkerClusterer loaded successfully', 'success');
-        } else {
-            updateStatus('cluster-status', false);
-            log('MarkerClusterer not available, will check again later', 'info');
-            setTimeout(function () {
-                if (typeof MarkerClusterer !== 'undefined') {
-                    updateStatus('cluster-status', true);
-                    log('MarkerClusterer loaded successfully on retry', 'success');
-                } else {
-                    log('MarkerClusterer failed to load after retry', 'error');
-                }
-            }, 2000);
-        }
-    }
-
-    function initLeafletMap() {
-        try {
-            const map = L.map('leaflet-map').setView([40.7128, -74.0060], 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            L.marker([40.7128, -74.0060])
-                .addTo(map)
-                .bindPopup('Test Property<br>New York, NY')
-                .openPopup();
-
-            log('Leaflet map initialized successfully', 'success');
-        } catch (e) {
-            log(`Error initializing Leaflet map: ${e.message}`, 'error');
-            console.error(e);
-        }
-    }
-
-    function initGoogleMap() {
-        try {
-            const map = new google.maps.Map(document.getElementById('google-map'), {
-                center: { lat: 40.7128, lng: -74.0060 },
-                zoom: 13,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            });
-
-            const marker = new google.maps.Marker({
-                position: { lat: 40.7128, lng: -74.0060 },
-                map: map,
-                title: 'Test Property'
-            });
-
-            const infowindow = new google.maps.InfoWindow({
-                content: '<div><strong>Test Property</strong><br>New York, NY</div>'
-            });
-
-            marker.addListener('click', function () {
-                infowindow.open(map, marker);
-            });
-
-            log('Google Maps initialized successfully', 'success');
-
-            // Try to initialize clustering
-            if (typeof MarkerClusterer !== 'undefined') {
-                try {
-                    const markers = [
-                        new google.maps.Marker({
-                            position: { lat: 40.7128, lng: -74.0060 },
-                            title: 'Property 1'
-                        }),
-                        new google.maps.Marker({
-                            position: { lat: 40.7228, lng: -74.0160 },
-                            title: 'Property 2'
-                        }),
-                        new google.maps.Marker({
-                            position: { lat: 40.7028, lng: -73.9960 },
-                            title: 'Property 3'
-                        })
-                    ];
-
-                    new MarkerClusterer({ map, markers });
-                    log('MarkerClusterer initialized successfully', 'success');
-                } catch (e) {
-                    log(`Error initializing MarkerClusterer: ${e.message}`, 'error');
-                    console.error(e);
-                }
+                mapboxgl.accessToken = '{{ mapbox_access_token|default:"" }}';
+                const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+                const map = new mapboxgl.Map({
+                    container: 'mapbox-map',
+                    style: styleUrl,
+                    center: [-74.0060, 40.7128],
+                    zoom: 12
+                });
+                new mapboxgl.Marker().setLngLat([-74.0060, 40.7128]).addTo(map);
+                log('Mapbox map initialized successfully', 'success');
+            } catch (e) {
+                log(`Error initializing Mapbox map: ${e.message}`, 'error');
+                console.error(e);
             }
-        } catch (e) {
-            log(`Error initializing Google Maps: ${e.message}`, 'error');
-            console.error(e);
         }
-    }
 </script>
 {% endblock %}

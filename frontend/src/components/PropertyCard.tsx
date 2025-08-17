@@ -10,9 +10,17 @@ import { Property } from "@/features/properties/propertiesSlice";
 
 interface PropertyCardProps {
   property: Property;
+  /**
+   * When true, mark this card's image as high priority (Next/Image LCP hint).
+   * Use sparingly (e.g., only the first visible card) to avoid fetchPriority warnings.
+   */
+  priority?: boolean;
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({
+  property,
+  priority = false,
+}: PropertyCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { favorites } = useAppSelector((state) => state.favorites);
@@ -64,7 +72,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               fill
               className="object-cover"
               unoptimized
-              priority
+              priority={priority}
             />
           ) : property.primary_image ? (
             <Image
@@ -73,7 +81,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               fill
               className="object-cover"
               unoptimized
-              priority
+              priority={priority}
             />
           ) : (
             <div className="h-full w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">

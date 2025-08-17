@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Test</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css?v=20250816" />
+    <title>Mapbox Test</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <style>
         body {
             margin: 0;
@@ -25,65 +25,64 @@
             border: 1px solid #ccc;
             background-color: #f9f9f9;
         }
+
+        .warn {
+            background: #fff3cd;
+            color: #664d03;
+            padding: 8px;
+            border: 1px solid #ffe69c;
+        }
     </style>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </head>
 
 <body>
-    <h1>Leaflet Map Test</h1>
+    <h1>Mapbox Map Test</h1>
     <div id="map"></div>
     <div class="debug-info">
         <h3>Debug Info</h3>
         <div id="debug"></div>
     </div>
-
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js?v=20250816"></script>
     <script>
         function log(message) {
             console.log(message);
             const debugDiv = document.getElementById('debug');
-            debugDiv.innerHTML += `<p>${message}</p>`;
+            debugDiv.innerHTML += '<p>' + message + '</p>';
         }
-
         document.addEventListener('DOMContentLoaded', function () {
-            try {
-                log('Initializing map...');
-
-                // Create map
-                const map = L.map('map').setView([39.8283, -98.5795], 4);
-                log('Map initialized');
-
-                // Add tile layer
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
-                log('Tile layer added');
-
-                // Add test markers
-                const cities = [
-                    { name: 'New York', lat: 40.7128, lng: -74.0060 },
-                    { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
-                    { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
-                    { name: 'Houston', lat: 29.7604, lng: -95.3698 },
-                    { name: 'Phoenix', lat: 33.4484, lng: -112.0740 }
-                ];
-
-                cities.forEach(city => {
-                    L.marker([city.lat, city.lng])
-                        .addTo(map)
-                        .bindPopup(`<b>${city.name}</b>`);
-                    log(`Added marker for ${city.name} at ${city.lat}, ${city.lng}`);
-                });
-
-                // Fit bounds
-                const bounds = cities.map(city => [city.lat, city.lng]);
-                map.fitBounds(bounds);
-                log('Map bounds adjusted');
-
-                log('Map setup complete');
-            } catch (e) {
-                log(`ERROR: ${e.message}`);
-                console.error(e);
+            const token = '{{ mapbox_access_token|default:"" }}';
+            const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+            if (!token) {
+                document.getElementById('map').innerHTML = '<div class="warn">Missing MAPBOX_ACCESS_TOKEN</div>';
+                log('Missing token');
+                return;
             }
+            mapboxgl.accessToken = token;
+            log('Initializing map...');
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: styleUrl,
+                center: [-98.5795, 39.8283],
+                zoom: 4
+            });
+            map.on('load', () => {
+                log('Map initialized');
+                const cities = [
+                    { name: 'New York', lng: -74.0060, lat: 40.7128 },
+                    { name: 'Los Angeles', lng: -118.2437, lat: 34.0522 },
+                    { name: 'Chicago', lng: -87.6298, lat: 41.8781 },
+                    { name: 'Houston', lng: -95.3698, lat: 29.7604 },
+                    { name: 'Phoenix', lng: -112.0740, lat: 33.4484 }
+                ];
+                const bounds = new mapboxgl.LngLatBounds();
+                cities.forEach(c => {
+                    new mapboxgl.Marker().setLngLat([c.lng, c.lat]).setPopup(new mapboxgl.Popup().setText(c.name)).addTo(map);
+                    bounds.extend([c.lng, c.lat]);
+                    log('Added marker for ' + c.name + ' at ' + c.lat + ', ' + c.lng);
+                });
+                map.fitBounds(bounds, { padding: 40 });
+                log('Map bounds adjusted');
+            });
         });
     </script>
 </body>

@@ -260,31 +260,56 @@ class PropertyAdmin(GISModelAdmin):
 
     def map_test_view(self, request):
         """Simple test view for the map functionality."""
+        from django.conf import settings
+
         context = {
             "title": "Map Test Page",
             "media": self.media,
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
         return render(request, "admin/properties/property/map_test.html", context)
 
     def map_debug_view(self, request):
         """Debugging view for the map functionality."""
         import random
+        from django.conf import settings
 
         context = {
             "title": "Map Debug Page",
             "media": self.media,
             "random_version": random.randint(10000, 99999),  # Cache busting
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
         return render(request, "admin/properties/property/map_debug.html", context)
 
     def leaflet_test_view(self, request):
         """Simple HTML test for Leaflet."""
-        context = {}
+        from django.conf import settings
+
+        context = {
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
+        }
         return render(request, "admin/properties/property/leaflet_test.html", context)
 
     def standalone_map_view(self, request):
         """Standalone map test with properties."""
-        context = {}
+        from django.conf import settings
+
+        context = {
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
+        }
         return render(request, "admin/properties/property/standalone_map.html", context)
 
     def basic_map_view(self, request):
@@ -313,16 +338,22 @@ class PropertyAdmin(GISModelAdmin):
         # Convert to JSON
         properties_json = json.dumps(property_data, cls=DjangoJSONEncoder)
 
+        from django.conf import settings
+
         context = {
             "title": "Basic Property Map",
             "properties_json": properties_json,
             "media": self.media,
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
 
         return render(request, "admin/properties/property/basic_map.html", context)
 
     def google_map_view(self, request):
-        """Map view using Google Maps."""
+        """Map view using Mapbox (replacing previous Google Maps)."""
         # Get filter parameters
         status = request.GET.get("status", "")
         listing_type = request.GET.get("listing_type", "")
@@ -387,6 +418,8 @@ class PropertyAdmin(GISModelAdmin):
         # Convert to JSON
         properties_json = json.dumps(property_data, cls=DjangoJSONEncoder)
 
+        from django.conf import settings
+
         context = {
             "title": "Property Map View",
             "properties": properties,
@@ -402,12 +435,13 @@ class PropertyAdmin(GISModelAdmin):
                 "city": city,
                 "state": state,
             },
-            # Pass map style from a method for easier customization
-            "map_style": self.get_map_style(),
             # Include media
             "media": self.media,
-            # Example API key placeholder (replace with your actual key in production)
-            # "google_maps_api_key": "YOUR_API_KEY_HERE",
+            # Mapbox config
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
 
         return render(
@@ -426,13 +460,17 @@ class PropertyAdmin(GISModelAdmin):
             messages.warning(request, "This property doesn't have coordinates set.")
             return redirect("admin:properties_property_change", property_id)
 
+        from django.conf import settings
+
         context = {
             "title": f"Map View: {property.title}",
             "property": property,
-            "map_style": self.get_map_style(),
-            # Example API key placeholder (replace with your actual key in production)
-            # "google_maps_api_key": "YOUR_API_KEY_HERE",
             "media": self.media,
+            # Mapbox config
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
 
         return render(
@@ -441,12 +479,16 @@ class PropertyAdmin(GISModelAdmin):
 
     def map_diagnostics_view(self, request):
         """View to run diagnostic tests on map functionality."""
+        from django.conf import settings
+
         context = {
             "title": "Map Diagnostics",
-            "map_style": self.get_map_style(),
-            # Example API key placeholder (replace with your actual key in production)
-            # "google_maps_api_key": "YOUR_API_KEY_HERE",
             "media": self.media,
+            # Mapbox config
+            "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+            "mapbox_style": getattr(
+                settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+            ),
         }
         return render(
             request, "admin/properties/property/map_diagnostics.html", context
@@ -533,6 +575,16 @@ class PropertyAdmin(GISModelAdmin):
             "media": self.media,
         }
 
+        from django.conf import settings
+
+        context.update(
+            {
+                "mapbox_access_token": getattr(settings, "MAPBOX_ACCESS_TOKEN", ""),
+                "mapbox_style": getattr(
+                    settings, "MAPBOX_STYLE", "mapbox://styles/mapbox/streets-v12"
+                ),
+            }
+        )
         return render(request, "admin/properties/property/map_view.html", context)
 
     def view_on_map(self, request, queryset):
@@ -555,7 +607,7 @@ class PropertyAdmin(GISModelAdmin):
             id_params = "&".join([f"id={id}" for id in selected_ids])
             return redirect(f"{base_url}?{id_params}")
 
-    view_on_google_map.short_description = "View on Google Maps"
+    view_on_google_map.short_description = "View on Mapbox"
 
     def run_map_diagnostics(self, request, queryset):
         """Admin action to run map diagnostics."""

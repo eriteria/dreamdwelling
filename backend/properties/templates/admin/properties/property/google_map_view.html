@@ -3,6 +3,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 <style>
     #map {
         width: 100%;
@@ -146,207 +147,105 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default:'' }}"></script>
-<!-- Add MarkerClusterer library -->
-<script src="https://unpkg.com/@googlemaps/markerclusterer@2.0.8/dist/index.min.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
-    // Map styles
-    const mapStyles = {{ map_style|default: '[]' | safe }};
-
     // Initialize the map when the page loads
     window.onload = function () {
-        console.log('Window loaded, initializing map');
         try {
-            initMap();
-            console.log('Map initialized successfully');
+            if (!("{{ mapbox_access_token|default:'' }}")) {
+                const mapDiv = document.getElementById('map');
+                mapDiv.innerHTML = '<div style="padding: 20px; text-align: center; background-color: #fff3cd; color: #664d03;">Missing MAPBOX_ACCESS_TOKEN</div>';
+                return;
+            }
+            mapboxgl.accessToken = '{{ mapbox_access_token|default:"" }}';
+            const styleUrl = '{{ mapbox_style|default:"mapbox://styles/mapbox/streets-v12" }}';
+
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: styleUrl,
+                center: [-98.5795, 39.8283],
+                zoom: 4
+            });
+
+            const properties = JSON.parse('{{ properties_json|escapejs }}');
+            const markersById = {};
+            const bounds = new mapboxgl.LngLatBounds();
+            let count = 0;
+
+            properties.forEach(p => {
+                if (p.latitude && p.longitude) {
+                    const marker = new mapboxgl.Marker()
+                        .setLngLat([p.longitude, p.latitude])
+                        .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML(`
+                            <div>
+                                <h3>${p.title}</h3>
+                                <p>${p.address_line1}, ${p.city}, ${p.state}</p>
+                                <p>${p.bedrooms} bd | ${p.bathrooms} ba | ${p.square_feet} sqft</p>
+                                <p><strong>$${Number(p.price).toLocaleString()}</strong></p>
+                                <p>Status: ${p.status}</p>
+                                <p>Listing Type: ${p.listing_type}</p>
+                                <p><a href="/admin/properties/property/${p.id}/change/" target="_blank">Edit Property</a></p>
+                            </div>
+                        `))
+                        .addTo(map);
+                    markersById[p.id] = marker;
+                    bounds.extend([p.longitude, p.latitude]);
+                    count++;
+                }
+            });
+
+            if (count) {
+                map.fitBounds(bounds, { padding: 40, maxZoom: 14 });
+            }
+
+            // Populate property list and attach click handlers
+            const propertyList = document.getElementById('property-list');
+            properties.forEach(p => {
+                if (p.latitude && p.longitude) {
+                    const propertyItem = document.createElement('div');
+                    propertyItem.className = 'property-item';
+                    propertyItem.id = `property-${p.id}`;
+                    propertyItem.innerHTML = `
+                        <h4>${p.title}</h4>
+                        <p>${p.address_line1}, ${p.city}, ${p.state}</p>
+                        <p><strong>$${Number(p.price).toLocaleString()}</strong></p>
+                        <p>${p.bedrooms} bd | ${p.bathrooms} ba | ${p.square_feet} sqft</p>
+                        <p>Status: ${p.status}</p>
+                    `;
+                    propertyItem.addEventListener('click', () => {
+                        const marker = markersById[p.id];
+                        if (marker) {
+                            const ll = marker.getLngLat();
+                            map.flyTo({ center: ll, zoom: 15 });
+                            marker.togglePopup();
+                            highlightProperty(p.id);
+                        }
+                    });
+                    propertyList.appendChild(propertyItem);
+                }
+            });
+
+            function highlightProperty(id) {
+                document.querySelectorAll('.property-item').forEach(item => item.classList.remove('active'));
+                const el = document.getElementById(`property-${id}`);
+                if (el) {
+                    el.classList.add('active');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
         } catch (e) {
-            console.error('Error initializing map:', e);
-            // Display error on the page
             const mapDiv = document.getElementById('map');
             if (mapDiv) {
                 mapDiv.innerHTML = `<div style="padding: 20px; text-align: center; background-color: #ffeeee; color: #cc0000;">
                     <h3>Error Loading Map</h3>
                     <p>${e.message}</p>
-                    <p>Check the browser console for more details.</p>
                 </div>`;
             }
+            console.error(e);
         }
     };
 
-    function initMap() {
-        // Create a map centered on the US
-        const map = new google.maps.Map(document.getElementById("map"), {
-            center: { lat: 39.8283, lng: -98.5795 },
-            zoom: 4,
-            maxZoom: 18,
-            styles: mapStyles
-        });
-
-        const infoWindow = new google.maps.InfoWindow();
-        const markers = [];
-        const markersById = {};
-        const bounds = new google.maps.LatLngBounds();
-        const properties = {{ properties_json| safe
-    }};
-
-    // Add markers for each property
-    properties.forEach(function (property) {
-        if (property.latitude && property.longitude) {
-            const position = {
-                lat: parseFloat(property.latitude),
-                lng: parseFloat(property.longitude)
-            };
-
-            const marker = new google.maps.Marker({
-                position: position,
-                title: property.title
-            });
-
-            marker.addListener("click", () => {
-                const content = `
-                        <div>
-                            <h3>${property.title}</h3>
-                            <p>${property.address_line1}, ${property.city}, ${property.state}</p>
-                            <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
-                            <p><strong>$${property.price.toLocaleString()}</strong></p>
-                            <p>Status: ${property.status}</p>
-                            <p>Listing Type: ${property.listing_type}</p>
-                            <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
-                        </div>
-                    `;
-
-                infoWindow.setContent(content);
-                infoWindow.open(map, marker);
-
-                // Highlight property in list
-                highlightProperty(property.id);
-            });
-
-            markers.push(marker);
-            markersById[property.id] = marker;
-            bounds.extend(position);
-        }
-    });
-
-    // Create a marker clusterer to manage the markers
-    const markerCluster = new markerClusterer.MarkerClusterer({
-        map,
-        markers,
-        algorithm: new markerClusterer.SuperClusterAlgorithm({
-            radius: 100, // Clustering radius in pixels
-            maxZoom: 15  // Max zoom level for clustering
-        }),
-        renderer: {
-            render: ({ count, position }) => {
-                // Color clusters based on the number of properties they contain
-                let fillColor = "#4285F4"; // Blue for small clusters
-
-                if (count > 10) {
-                    fillColor = "#FBBC05"; // Yellow for medium clusters
-                }
-
-                if (count > 25) {
-                    fillColor = "#EA4335"; // Red for large clusters
-                }
-
-                return new google.maps.Marker({
-                    position,
-                    label: { text: String(count), color: "white" },
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        fillColor: fillColor,
-                        fillOpacity: 0.8,
-                        strokeColor: "#ffffff",
-                        strokeWeight: 2,
-                        scale: Math.log10(count) * 10 + 15, // Size based on count
-                    },
-                    zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
-                });
-            },
-        },
-        onClusterClick: (event, cluster, map) => {
-            const markers = cluster.markers;
-            const clusterBounds = new google.maps.LatLngBounds();
-            markers.forEach(marker => clusterBounds.extend(marker.getPosition()));
-
-            // Zoom the map to fit just the clicked cluster
-            map.fitBounds(clusterBounds);
-
-            // Optional: If there are just a few markers, zoom in more
-            if (markers.length < 10) {
-                map.setZoom(Math.min(map.getZoom() + 2, 18));
-            }
-        }
-    });
-
-    // Fit the map to the bounds of all markers if we have any
-    if (markers.length > 0) {
-        map.fitBounds(bounds);
-    }
-
-    // Populate property list
-    const propertyList = document.getElementById("property-list");
-    properties.forEach(function (property) {
-        if (property.latitude && property.longitude) {
-            const propertyItem = document.createElement("div");
-            propertyItem.className = "property-item";
-            propertyItem.id = `property-${property.id}`;
-            propertyItem.innerHTML = `
-                    <h4>${property.title}</h4>
-                    <p>${property.address_line1}, ${property.city}, ${property.state}</p>
-                    <p><strong>$${property.price.toLocaleString()}</strong></p>
-                    <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
-                    <p>Status: ${property.status}</p>
-                `;
-
-            propertyItem.addEventListener("click", function () {
-                const marker = markersById[property.id];
-
-                // Open info window
-                const content = `
-                        <div>
-                            <h3>${property.title}</h3>
-                            <p>${property.address_line1}, ${property.city}, ${property.state}</p>
-                            <p>${property.bedrooms} bd | ${property.bathrooms} ba | ${property.square_feet} sqft</p>
-                            <p><strong>$${property.price.toLocaleString()}</strong></p>
-                            <p>Status: ${property.status}</p>
-                            <p>Listing Type: ${property.listing_type}</p>
-                            <p><a href="/admin/properties/property/${property.id}/change/" target="_blank">Edit Property</a></p>
-                        </div>
-                    `;
-
-                infoWindow.setContent(content);
-                infoWindow.open(map, marker);
-
-                // Pan to marker
-                map.panTo(marker.getPosition());
-                map.setZoom(15);
-
-                // Highlight property in list
-                highlightProperty(property.id);
-            });
-
-            propertyList.appendChild(propertyItem);
-        }
-    });
-    }
-
-    function highlightProperty(propertyId) {
-        // Remove active class from all items
-        document.querySelectorAll(".property-item").forEach(function (item) {
-            item.classList.remove("active");
-        });
-
-        // Add active class to selected item
-        const selectedItem = document.getElementById(`property-${propertyId}`);
-        if (selectedItem) {
-            selectedItem.classList.add("active");
-            selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }
-    }
-
     function clearFilters() {
-        // Reset all form fields
         document.getElementById("status").value = "";
         document.getElementById("listing_type").value = "";
         document.getElementById("min_price").value = "";
@@ -355,8 +254,6 @@
         document.getElementById("min_bathrooms").value = "";
         document.getElementById("city").value = "";
         document.getElementById("state").value = "";
-
-        // Submit the form
         document.getElementById("filter-form").submit();
     }
 </script>
